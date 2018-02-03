@@ -54,7 +54,7 @@ print("training and testing classifier");
 knn.train(train_data[:limit], train_target[:limit][:, label])
 output = knn.predict(eval_data[:limit])
 check_output(output,eval_target[:limit])
-print(knn.score(eval_data[:limit],eval_target[:limit][:, label])
+print(knn.score(eval_data[:limit],eval_target[:limit][:, label]))
 
 # classifier.fit()
 print("---------------------");

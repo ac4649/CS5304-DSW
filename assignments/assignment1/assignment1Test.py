@@ -8,7 +8,7 @@ import argparse;
 
 print("Importing the classes");
 from assign1 import CS5304KNNClassifier
-# from assign1 import CS5304NBClassifier
+from assign1 import CS5304NBClassifier
 # from assign1 import CS5304KMeansClassifier
 from assign1 import load_labels, load_training_data, load_validation_data
 
@@ -48,19 +48,25 @@ print("Initializing the classifier");
 limit = 1000
 k = 10 #change this
 knn = CS5304KNNClassifier(n_neighbors=k)
+print("training and testing classifier");
 # print(train_data[:limit])
 # print(train_target[:limit][:, label])
 knn.train(train_data[:limit], train_target[:limit][:, label])
 output = knn.predict(eval_data[:limit])
-print(output);
 check_output(output,eval_target[:limit])
-
-print(knn.score(eval_data[:limit],eval_target[:limit][:, label]))
+print(knn.score(eval_data[:limit],eval_target[:limit][:, label])
 
 # classifier.fit()
-
-
 print("---------------------");
+print("Testing NB Bernoulli Classification:");
+print("Initializing Classifier")
+nb = CS5304NBClassifier()
+
+print("training and testing classifier");
+nb.train(train_data, train_target[:, label])
+output = nb.predict(eval_data)
+print(nb.score(eval_data,eval_target[:, label]))
+# check_output(output,eval_target)
 
 
 

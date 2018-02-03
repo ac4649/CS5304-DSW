@@ -4,6 +4,7 @@ import numpy as np
 
 from sklearn.datasets import fetch_rcv1
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import BernoulliNB
 
 def load_labels(pathtoLabels):
     DF = pd.read_csv(pathtoLabels,header=None);
@@ -79,7 +80,34 @@ class CS5304KNNClassifier():
 
 class CS5304NBClassifier():
 
+    classifier = None;
+
     def __init__(self):
+        self.classifier = BernoulliNB()
+        return
+    
+    def train(self,fitX, fitY):
+        fitXIndexElem = fitX.indptr;
+        fitYIndexElem = fitY.indptr;
+
+        fitXelemDF = pd.Series(data=fitX.indptr[1:])
+        fitYelemDF = pd.Series(data=fitY.indptr[1:])
+
+        dataArray = fitX.toarray()
+        dataDF = pd.DataFrame(data=dataArray,index=fitXelemDF)
+
+        targetArray = fitY.toarray()
+        targetDF = pd.DataFrame(data=targetArray,index=fitYelemDF)
+
+        self.classifier.fit(dataDF,targetDF);
+        return
+
+    def predict(self,predictX):
+        dataArray = predictX.toarray()
+        dataDF = pd.DataFrame(data=dataArray)
+        return self.classifier.predict(predictX)
+
+    def score(self,data,labels):
         return
 
 class CS5304KMeansClassifier():

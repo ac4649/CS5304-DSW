@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from sklearn.datasets import fetch_rcv1
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import KNeighborsClassifier
 
 def load_labels(pathtoLabels):
     DF = pd.read_csv(pathtoLabels,header=None);
@@ -33,25 +33,47 @@ class CS5304KNNClassifier():
     #     # Initialization of the knn classifier should be done here
     #     self.classifier = NearestNeighbors(n_neighbors=self.numNeighbors);        
     #     return
-    def __init__(self,newNumNeighbors = None):
-        if (type(newNumNeighbors) == int):
-            self.numNeighbors = newNumNeighbors;
-        self.classifier = NearestNeighbors(n_neighbors=self.numNeighbors);        
+    def __init__(self,n_neighbors = None):
+        if (type(n_neighbors) == int):
+            self.numNeighbors = n_neighbors;
+        self.classifier = KNeighborsClassifier(n_neighbors=self.numNeighbors,algorithm='brute');        
 
-    def train(fitX, fitY):
+    def train(self,fitX, fitY):
+        #in the fitX, fitY sparce matrix, the index of the element is in indptr
 
-        targetArray = dataSet['target'].toarray()
-        targetDF = pd.DataFrame(data=targetArray,index=dataSet.sample_id,columns=dataSet.target_names)
-        targetDF.head()
+        fitXIndexElem = fitX.indptr;
+        fitYIndexElem = fitY.indptr;
 
-        self.classifier.fit(fitX,fitY);
+        fitXelemDF = pd.Series(data=fitX.indptr[1:])
+        fitYelemDF = pd.Series(data=fitY.indptr[1:])
+        # print(fitXelemDF);
+        # print(fitYelemDF);
+
+
+        dataArray = fitX.toarray()
+        dataDF = pd.DataFrame(data=dataArray,index=fitXelemDF)
+        # print(dataDF)
+
+        targetArray = fitY.toarray()
+        targetDF = pd.DataFrame(data=targetArray,index=fitYelemDF)
+        # print(targetDF)
+
+        self.classifier.fit(dataDF,targetDF);
         return
 
-    def predict(predictX):
-        return classifier.predict(predictX)
+    def predict(self,predictX):
+        dataArray = predictX.toarray()
+        dataDF = pd.DataFrame(data=dataArray)
+        return self.classifier.predict(predictX)
 
-    def score(data,labels):
-        return classifier.score(data,labels)
+    def score(self,data,labels):
+        dataArray = data.toarray()
+        dataDF = pd.DataFrame(data=dataArray)
+
+        predictArray = labels.toarray()
+        labelsDF = pd.DataFrame(data=predictArray)
+
+        return self.classifier.score(dataDF,labelsDF)
 
 
 

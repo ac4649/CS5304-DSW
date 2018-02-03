@@ -12,6 +12,18 @@ from assign1 import CS5304KNNClassifier
 # from assign1 import CS5304KMeansClassifier
 from assign1 import load_labels, load_training_data, load_validation_data
 
+
+def load_ks(path_to_ks):
+    ks = pd.read_csv(path_to_ks, names=['k'], dtype=np.int32)
+    return ks['k'].tolist()
+
+
+def check_output(output, y):
+    assert type(output) == np.ndarray
+    assert output.ndim == 1
+    assert output.shape[0] == y.shape[0]
+
+
 print("Argument Parsing");
 parser = argparse.ArgumentParser()
 parser.add_argument("--path_to_labels", default="labels.txt", type=str)
@@ -22,6 +34,7 @@ options = parser.parse_args()
 
 
 print("Importing dataSets");
+label = options.label
 labels = load_labels(options.path_to_labels)
 train_data, train_target, _ = load_training_data()
 eval_data, eval_target, _ = load_validation_data(options.path_to_ids)
@@ -31,8 +44,18 @@ print("Loading the Data into dataframe:");
 print("---------------------");
 print("Testing KNN Classification:");
 print("Initializing the classifier");
-classifier = CS5304KNNClassifier();
 
+limit = 1000
+k = 10 #change this
+knn = CS5304KNNClassifier(n_neighbors=k)
+# print(train_data[:limit])
+# print(train_target[:limit][:, label])
+knn.train(train_data[:limit], train_target[:limit][:, label])
+output = knn.predict(eval_data[:limit])
+print(output);
+check_output(output,eval_target[:limit])
+
+print(knn.score(eval_data[:limit],eval_target[:limit][:, label]))
 
 # classifier.fit()
 

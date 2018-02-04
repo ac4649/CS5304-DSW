@@ -81,9 +81,8 @@ class CS5304KNNClassifier():
 class CS5304NBClassifier():
 
     classifier = None;
-
-    def __init__(self,inputAlpha = 1):
-        self.classifier = BernoulliNB(alpha=inputAlpha)
+    def __init__(self, alphanew = 1.25):
+        self.classifier = BernoulliNB(alpha = alphanew)
         return
     
     def train(self,fitX, fitY):

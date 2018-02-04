@@ -82,24 +82,13 @@ class CS5304NBClassifier():
 
     classifier = None;
 
-    def __init__(self):
-        self.classifier = BernoulliNB()
+    def __init__(self,inputAlpha = 1):
+        self.classifier = BernoulliNB(alpha=inputAlpha)
         return
     
     def train(self,fitX, fitY):
-        fitXIndexElem = fitX.indptr;
-        fitYIndexElem = fitY.indptr;
-
-        fitXelemDF = pd.Series(data=fitX.indptr[1:])
-        fitYelemDF = pd.Series(data=fitY.indptr[1:])
-
-        dataArray = fitX.toarray()
-        dataDF = pd.DataFrame(data=dataArray,index=fitXelemDF)
-
-        targetArray = fitY.toarray()
-        targetDF = pd.DataFrame(data=targetArray,index=fitYelemDF)
-
-        self.classifier.fit(dataDF,targetDF);
+        
+        self.classifier.fit(fitX,fitY.todense())
         return
 
     def predict(self,predictX):
@@ -108,7 +97,7 @@ class CS5304NBClassifier():
         return self.classifier.predict(predictX)
 
     def score(self,data,labels):
-        return
+        return self.classifier.score(data,labels.todense())
 
 class CS5304KMeansClassifier():
 

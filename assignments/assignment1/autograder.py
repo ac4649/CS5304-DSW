@@ -44,6 +44,9 @@ if __name__ == '__main__':
     train_data, train_target, _ = load_training_data()
     eval_data, eval_target, _ = load_validation_data(options.path_to_ids)
 
+
+    k = ks[labels.index(label)]
+
     # Grade Ex. 1a
     limit = 1000
     knn = CS5304KNNClassifier(n_neighbors=k)

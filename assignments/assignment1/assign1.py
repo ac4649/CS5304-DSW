@@ -99,6 +99,76 @@ class CS5304NBClassifier():
         return self.classifier.score(data,labels.todense())
 
 class CS5304KMeansClassifier():
-
-    def __init__(self):
+    classifier = None;
+#     centroids = None;
+    numClusters = 2;
+    def __init__(self, n_clusters=2, init='k-means++'):
+        self.numClusters = n_clusters
         return
+    
+    def train(self,fitX, fitY):
+        dataset = pd.DataFrame(data = fitX.toarray())
+        dataset['label'] = fitY.todense()
+        # print(dataset.head(20))
+#         dataset.info(memory_usage='deep')
+        
+#         meanData = dataset[dataset['label'] == 1].drop(columns = ['label']).mean()
+#         meanOtherData = dataset[dataset['label'] == 0].drop(columns = ['label']).mean()
+        preClassifier = KMeans(n_clusters=1)
+        preClassifier.fit(dataset[dataset['label'] == 1].drop(columns = ['label']))
+        
+        meanCentroid = pd.Series(preClassifier.cluster_centers_[0])
+#         print(meanCentroid);
+        
+        preClassifier.fit(dataset[dataset['label'] == 0].drop(columns = ['label']))
+        meanOtherDataCentroid = pd.Series(preClassifier.cluster_centers_[0])
+#         print(meanOtherDataCentroid);
+        
+        
+        
+        
+#         print(meanData)
+#         print(meanData.shape)
+#         print(meanOtherData)
+#         print(meanOtherData.shape)
+        
+        del dataset # memory drain so delete it
+        
+        initClusters = pd.concat([meanOtherDataCentroid, meanCentroid], axis = 1);
+        
+        print(initClusters.head())
+        print(initClusters.shape)
+        
+        
+        
+        self.classifier = KMeans(n_clusters=self.numClusters, init=initClusters.T)
+
+        self.classifier.fit(fitX,fitY.todense())
+        
+        return 
+    
+    def predict(self,predictX):
+#         dataArray = predictX.toarray()
+#         dataDF = pd.DataFrame(data=dataArray)
+        return self.classifier.predict(predictX)
+
+    def score(self,data,labels):
+        predictedClusters = self.classifier.predict(data);
+        dataFrame = pd.DataFrame(data = predictedClusters, columns=['Predicted'])
+        dataFrame['actual'] = labels.todense()
+        dataFrame['predictedAccuracy'] = dataFrame['Predicted'] == dataFrame['actual']
+        
+        numItemsOfClass = (dataFrame['actual'] == 1).sum()
+        numItemsNotOfClass = (dataFrame['actual'] == 0).sum()
+        
+        truePositives = ((dataFrame['actual'] == 1) & (dataFrame['Predicted'] == 1)).sum()
+        falsePositives = ((dataFrame['actual'] == 0) & (dataFrame['Predicted'] == 1)).sum()
+        falseNegatives = ((dataFrame['actual'] == 1) & (dataFrame['Predicted'] == 0)).sum()
+        trueNegatives = ((dataFrame['actual'] == 0) & (dataFrame['Predicted'] == 0)).sum()
+        
+        Precision = truePositives / (truePositives + falsePositives)
+        Recall = truePositives / (truePositives + falseNegatives)
+        print(Precision)
+        print(Recall)
+        f1 = 1/((1/Precision) + (1/Recall))
+        return f1

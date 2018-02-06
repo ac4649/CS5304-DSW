@@ -45,7 +45,7 @@ if __name__ == '__main__':
     eval_data, eval_target, _ = load_validation_data(options.path_to_ids)
 
 
-    k = ks[labels.index(label)]
+    k = 33
 
     # Grade Ex. 1a
     limit = 1000

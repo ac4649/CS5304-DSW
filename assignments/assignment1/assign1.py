@@ -5,6 +5,9 @@ import numpy as np
 from sklearn.datasets import fetch_rcv1
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import BernoulliNB
+from sklearn.cluster import KMeans
+from sklearn.cluster import k_means
+from sklearn.decomposition import TruncatedSVD
 
 def load_labels(pathtoLabels):
     DF = pd.read_csv(pathtoLabels,header=None);

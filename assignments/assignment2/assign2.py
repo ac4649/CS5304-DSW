@@ -56,17 +56,17 @@ def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,
 
         dataFrame = pd.concat([dataFrame,curData])
         
-        clear_output()
-        print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
-        print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
+        # clear_output()
+        # print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
+        # print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
         if (dataFrame.shape[0] - prevsize) > 500000:
             prevsize = dataFrame.shape[0]
 #             dataFrame.to_csv(frameSaveName)
-        elif dataFrame.shape[0] == indexValues.shape[0]:
-            print("Finished with the data collection")
-#             dataFrame.to_csv(frameSaveName)
-            break
-    print("Extraction is Done, now saving frame")        
+#         elif dataFrame.shape[0] == indexValues.shape[0]:
+#             print("Finished with the data collection")
+# #             dataFrame.to_csv(frameSaveName)
+#             break
+    # print("Extraction is Done, now saving frame")        
     return dataFrame
 
 # This method generates is a wrapper around the generateSubset to generate the subset and save the dataframe to a csv file (for being able to make use of it after)
@@ -106,7 +106,7 @@ def read_data(data_path, train_path, validation_path, test_path):
 
 
     # Generate the actual data files
-    column_headers = pd.read_csv('data_columns.csv',squeeze = True)
+    column_headers = getColumnHeaders()
     try:
         train1M = pd.read_csv('train1M.csv',squeeze = True)
     except:
@@ -115,12 +115,26 @@ def read_data(data_path, train_path, validation_path, test_path):
         train1M = generateAndSaveSubset('dac/train.txt',train1M,trainIndeces,4000000,46000000,column_headers,'train1M.csv')
 
 
+    try:
+        validation250k = pd.read_csv('validation250k.csv',squeeze = True)
+    except:
+        print("No 250k collection")
+        validation250k = pd.DataFrame()
+        validation250k = generateAndSaveSubset('dac/train.txt',validation250k,validationIndeces,4000000,46000000,column_headers,'validation250k.csv')
+
+    try:
+        test750k = pd.read_csv('test750k.csv',squeeze = True)
+    except:
+        print("No 750k collection")
+        test750k = pd.DataFrame()
+        test750k = generateAndSaveSubset('dac/train.txt',test750k,validationIndeces,4000000,46000000,column_headers,'test750k.csv')
+
     # train_data, train_target = np.zeros((1000000, 39)), np.zeros((1000000,))
     # validation_data, validation_target = np.zeros((250000, 39)), np.zeros((250000,))
     # test_data, test_target = np.zeros((750000, 39)), np.zeros((750000,))
 
 
-    # return train_data, train_target, validation_data, validation_target, test_data, test_target
+    # return train1M.to_array(), trainIndeces.to_array(), validation250k.to_array(), validation_target, test_data, test_target
 
 
 def preprocess_int_data(data, features):

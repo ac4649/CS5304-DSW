@@ -11,7 +11,7 @@ import itertools
 # This function defines the column headers for the data frames
 def getColumnHeaders():
     return pd.Series(data=['Index','label','integer_1','integer_2','integer_3',
-                                 'integer_4','integer_5','integer_6','integer_7','integer_8','integer_9'
+                                 'integer_4','integer_5','integer_6','integer_7','integer_8','integer_9',
                                  'integer_10','integer_11','integer_12','integer_13','categorical_1',
                                  'categorical_2','categorical_3','categorical_4','categorical_5','categorical_6',
                                  'categorical_7','categorical_8','categorical_9','categorical_10','categorical_11',
@@ -47,9 +47,8 @@ def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,
 #         print(curData.shape)
 #         print(curData.index.shape)
 
-        
-        curData.columns = column_headers
         curData['Index'] = curData.index
+        curData.columns = column_headers
         
         curIndexRange = indexValues['Index'][(indexValues['Index'] < (i*numRowsPerItteration + numRowsPerItteration)) & (indexValues['Index'] > (i*numRowsPerItteration-1))]
         curData = curData[curData['Index'].isin(curIndexRange)]
@@ -76,6 +75,11 @@ def generateAndSaveSubset(file,dataFrame,indexValues,numRowsPerItteration,totalN
     return dataFrame
 
 def read_data(data_path, train_path, validation_path, test_path):
+
+    #train_path is the training ids
+    #validation_path is the validation ids
+    #test_path is the test ids
+
 
     #Load or Generate the 2M indeces to use
     try:

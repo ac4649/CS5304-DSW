@@ -21,7 +21,7 @@ def getColumnHeaders():
 
 # this function generateNIndecesFrom takes a range of Indeces and randomly takes n of them, returns a pandas Series object
 def generateNIndecesFrom(n, rangeOfIndeces):
-    print("Generating " + str(n) + " indeces from range")
+    # print("Generating " + str(n) + " indeces from range")
     allIndeces = random.sample(rangeOfIndeces, n)
     allIndeces = pd.Series(data = allIndeces)
     allIndeces = allIndeces.sort_values().reset_index().drop(['index'],axis=1)
@@ -32,7 +32,7 @@ def generateNIndecesFrom(n, rangeOfIndeces):
 # a number of rows per itteration (this is used to not overload the memory) , total number of rows in the file, the column headers for the new dataframe
 def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,column_headers):
     totalNumIterations = int(totalNumRows/numRowsPerItteration)
-    print("Number of itterations = " + str(totalNumIterations))
+    # print("Number of itterations = " + str(totalNumIterations))
     totalNumRowsTraversed = 0
     prevsize = 0
     for i in range(totalNumIterations + 1):
@@ -82,7 +82,7 @@ def read_data(data_path, train_path, validation_path, test_path):
         twoMIndeces = pd.read_csv('2MIndeces.csv',squeeze = True)
         
     except:
-        print("There were not 2000000 data points")
+        # print("There were not 2000000 data points")
         twoMIndeces = generateNIndecesFrom(2000000,range(0,45840617)) # this range is because there are this number of records in the training set.
         twoMIndeces.to_csv('2MIndeces.csv',index=False,header=False)
 
@@ -92,7 +92,7 @@ def read_data(data_path, train_path, validation_path, test_path):
         trainIndeces = pd.read_csv('train_ids.txt',squeeze = True)
         validationIndeces = pd.read_csv('validation_ids.txt',squeeze = True)
     except:
-        print("There were not 1000000 data points")
+        # print("There were not 1000000 data points")
         trainIndeces = generateNIndecesFrom(1000000,list(twoMIndeces['Index']))
         trainIndeces.to_csv('train_ids.txt',index=False,header=False)
 
@@ -110,7 +110,7 @@ def read_data(data_path, train_path, validation_path, test_path):
     try:
         train1M = pd.read_csv('train1M.csv',squeeze = True)
     except:
-        print("No 1M collection")
+        # print("No 1M collection")
         train1M = pd.DataFrame()
         train1M = generateAndSaveSubset('dac/train.txt',train1M,trainIndeces,4000000,46000000,column_headers,'train1M.csv')
 
@@ -118,14 +118,14 @@ def read_data(data_path, train_path, validation_path, test_path):
     try:
         validation250k = pd.read_csv('validation250k.csv',squeeze = True)
     except:
-        print("No 250k collection")
+        # print("No 250k collection")
         validation250k = pd.DataFrame()
         validation250k = generateAndSaveSubset('dac/train.txt',validation250k,validationIndeces,4000000,46000000,column_headers,'validation250k.csv')
 
     try:
         test750k = pd.read_csv('test750k.csv',squeeze = True)
     except:
-        print("No 750k collection")
+        # print("No 750k collection")
         test750k = pd.DataFrame()
         test750k = generateAndSaveSubset('dac/train.txt',test750k,validationIndeces,4000000,46000000,column_headers,'test750k.csv')
 

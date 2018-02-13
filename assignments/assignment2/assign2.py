@@ -2,9 +2,22 @@
 
 import numpy as np
 import pandas as pd
+import random
+import re
+import itertools
 
 
 # Additional helper functions required for the code to run:
+# This function defines the column headers for the data frames
+def getColumnHeaders():
+    return pd.Series(data=['Index','label','integer_1','integer_2','integer_3',
+                                 'integer_4','integer_5','integer_6','integer_7','integer_8','integer_9'
+                                 'integer_10','integer_11','integer_12','integer_13','categorical_1',
+                                 'categorical_2','categorical_3','categorical_4','categorical_5','categorical_6',
+                                 'categorical_7','categorical_8','categorical_9','categorical_10','categorical_11',
+                                 'categorical_12','categorical_13','categorical_14','categorical_15','categorical_16',
+                                 'categorical_17','categorical_18','categorical_19','categorical_20','categorical_21',
+                                 'categorical_22','categorical_23','categorical_24','categorical_25','categorical_26'])
 
 # this function generateNIndecesFrom takes a range of Indeces and randomly takes n of them, returns a pandas Series object
 def generateNIndecesFrom(n, rangeOfIndeces):
@@ -64,10 +77,10 @@ def generateAndSaveSubset(file,dataFrame,indexValues,numRowsPerItteration,totalN
 
 def read_data(data_path, train_path, validation_path, test_path):
 
-    #Generate the random indeces
+    #Load or Generate the 2M indeces to use
     try:
-    twoMIndeces = pd.read_csv('2MIndeces.csv',squeeze = True)
-    
+        twoMIndeces = pd.read_csv('2MIndeces.csv',squeeze = True)
+        
     except:
         print("There were not 2000000 data points")
         twoMIndeces = generateNIndecesFrom(2000000,range(0,45840617)) # this range is because there are this number of records in the training set.
@@ -88,6 +101,7 @@ def read_data(data_path, train_path, validation_path, test_path):
         validationIndeces.to_csv('validation_ids.txt',index=False,header=False)
         
         testingIndeces = twoMIndeces['Index'][~(twoMIndeces['Index'].isin(trainIndeces.values) | twoMIndeces['Index'].isin(validationIndeces.values))]
+        testingIndeces = generateNIndecesFrom(750000,list(testingIndeces))
         testingIndeces.to_csv('testing_ids.txt',index=False,header=False)
 
 

@@ -1,3 +1,9 @@
+import numpy as np
+import pandas as pd
+import random
+import re
+import itertools
+
 # Additional helper functions required for the code to run:
 # This function defines the column headers for the data frames
 def getColumnHeaders():

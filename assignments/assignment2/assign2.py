@@ -52,47 +52,26 @@ def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,
     totalNumRowsTraversed = 0
     prevsize = 0
     for i in range(totalNumIterations + 1):
-#         
-#         print("Itteration number: " + str(i))
-#         print("skipRows: " + str(i * numRowsPerItteration))
-#         print("Read in : " + str(numRowsPerItteration))
+
         curData = pd.read_table(file,skiprows = i * numRowsPerItteration, nrows = numRowsPerItteration,header=None)
         curData.index = [i for i in range(i*numRowsPerItteration,i*numRowsPerItteration + curData.shape[0])]
         totalNumRowsTraversed = totalNumRowsTraversed + curData.shape[0]
-        clear_output()
-#         print(curData.head())
-#         print(curData.shape)
-#         print(curData.index.shape)
+        
 
         curData['Index'] = curData.index
         curData.columns = column_headers
         
         curIndexRange = indexValues['Index'][(indexValues['Index'] < (i*numRowsPerItteration + numRowsPerItteration)) & (indexValues['Index'] > (i*numRowsPerItteration-1))]
-#         print(curIndexRange)
-#         print(curData.head())
-#         print(curData['Index'])
-#         print(curData['Index'].isin(curIndexRange))
-        curData = curData[curData['Index'].isin(list(curIndexRange))] # this line isn't working for some reason
-#         print(curData.head())
+        curData = curData[curData['Index'].isin(list(curIndexRange))]
         
         dataFrame = pd.concat([dataFrame,curData])
         
-                
-        
-#         print(dataFrame.head())
-#         print(curData.head())
-        
-        
-        # print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
-        # print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
+        clear_output()
+        print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
+        print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
         if (dataFrame.shape[0] - prevsize) > 500000:
             prevsize = dataFrame.shape[0]
-#             dataFrame.to_csv(frameSaveName)
-#         elif dataFrame.shape[0] == indexValues.shape[0]:
-#             print("Finished with the data collection")
-# #             dataFrame.to_csv(frameSaveName)
-#             break
-    # print("Extraction is Done, now saving frame")        
+      
     return dataFrame
 
 # This method generates is a wrapper around the generateSubset to generate the subset and save the dataframe to a csv file (for being able to make use of it after)
@@ -103,10 +82,10 @@ def generateAndSaveSubset(file,dataFrame,indexValues,numRowsPerItteration,totalN
 
 def read_data(data_path, train_path, validation_path, test_path):
 
-    # print(data_path)
-    # print(train_path)
-    # print(validation_path)
-    # print(test_path)
+    print(data_path)
+    print(train_path)
+    print(validation_path)
+    print(test_path)
     
     #get the ids
     try:
@@ -114,7 +93,7 @@ def read_data(data_path, train_path, validation_path, test_path):
         validationIndeces = pd.read_csv(validation_path, header = None)
         testingIndeces = pd.read_csv(test_path, header = None)
     except:
-        # print("There were not 1000000 data points")
+        print("There were not 1000000 data points")
         trainIndeces = generateNIndecesFrom(1000000,list(twoMIndeces['Index']))
         trainIndeces.to_csv('train_ids.txt',index=False,header=False)
 
@@ -129,45 +108,35 @@ def read_data(data_path, train_path, validation_path, test_path):
     trainIndeces.columns = ['Index']
     validationIndeces.columns = ['Index']
     testingIndeces.columns = ['Index']
-#     print(trainIndeces.head())
-#     print(validationIndeces.head())
-#     print(testingIndeces.head())
-    
+
     # Generate the actual data files
     column_headers = getColumnHeaders()
-    # print("No 1M collection")
     train1M = pd.DataFrame()
     train1M = generateSubSet(data_path,train1M,trainIndeces,4000000,46000000,column_headers)
-#     print(train1M.head())
 
-    # print("No 250k collection")
     validation250k = pd.DataFrame()
     validation250k = generateSubSet(data_path,validation250k,validationIndeces,4000000,46000000,column_headers)
 
-
-    # print("No 750k collection")
     test750k = pd.DataFrame()
     test750k = generateSubSet(data_path,test750k,testingIndeces,4000000,46000000,column_headers)
     
     
-    # print(train1M.shape)
-    # print(validation250k.shape)
-    # print(test750k.shape)
-
-    # train_data, train_target = np.zeros((1000000, 39)), np.zeros((1000000,))
-    # validation_data, validation_target = np.zeros((250000, 39)), np.zeros((250000,))
-    # test_data, test_target = np.zeros((750000, 39)), np.zeros((750000,))
-
+#     print(train1M.shape)
+#     print(validation250k.shape)
+#     print(test750k.shape)
 
     return train1M[train1M.columns[1:40]].values, train1M['label'].values, validation250k[validation250k.columns[1:40]].values, validation250k['label'].values, test750k[test750k.columns[1:40]].values, test750k['label'].values
-#     return 
 
 def preprocess_int_data(data, features):
     n = len([f for f in features if f < 13])
-    print(n)
-    print(data)
+#     print(n)
+#     print(data)
     dataFrame = pd.DataFrame(data)
-    print(dataFrame.head())
+#     print(dataFrame.head())
+    dataFrame[dataFrame.columns[0:13]] = dataFrame[dataFrame.columns[0:13]].fillna(0)
+    dataFrame[dataFrame.columns[0:13]] = dataFrame[dataFrame.columns[0:13]].replace(-1,0)
+    dataFrame[dataFrame.columns[0:13]] = dataFrame[dataFrame.columns[0:13]].replace(-2,0)
+#     print(dataFrame[dataFrame.columns[0:13]])
     return np.zeros((data.shape[0], n))
 
 

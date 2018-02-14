@@ -1,12 +1,3 @@
-# template for assign2.py
-
-import numpy as np
-import pandas as pd
-import random
-import re
-import itertools
-
-
 # Additional helper functions required for the code to run:
 # This function defines the column headers for the data frames
 def getColumnHeaders():
@@ -27,6 +18,25 @@ def generateNIndecesFrom(n, rangeOfIndeces):
     allIndeces = allIndeces.sort_values().reset_index().drop(['index'],axis=1)
     allIndeces.columns = ['Index'];
     return allIndeces
+
+# This function takes in a dataframe and computes statistics and histograms for all columns that are not 'label', 'Index' or 'Unnamed: 0'
+# It was used in part 2.2 to generate the histograms and statistics.
+# It can for example be placed at the end of the read_data method and be passed one of the datasets to compute its statistics and histograms
+def generateSummaryStatsAndHists(train1M):
+    SummaryStats = pd.DataFrame()
+    for col in train1M.columns:
+        if (col != 'label' and col != 'Index' and col != 'Unnamed: 0'):
+
+            train1M[col].value_counts().plot(kind='hist',title=col, bins=100)
+            plt.savefig(col)
+            plt.show()
+            plt.gcf().clear()
+            if (train1M[col].dtype != 'O'):
+                SummaryStats[col] = train1M[col].describe()   
+    # SummaryStats.head()
+    SummaryStats.to_csv('integerStats.csv')
+    return SummaryStats
+
 
 # the generateSubSet function takes in a file, a dataFrame to put the data in as well as index values which should be extracted,
 # a number of rows per itteration (this is used to not overload the memory) , total number of rows in the file, the column headers for the new dataframe
@@ -67,8 +77,8 @@ def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,
 #         print(curData.head())
         
         
-        print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
-        print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
+        # print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
+        # print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
         if (dataFrame.shape[0] - prevsize) > 500000:
             prevsize = dataFrame.shape[0]
 #             dataFrame.to_csv(frameSaveName)
@@ -87,10 +97,10 @@ def generateAndSaveSubset(file,dataFrame,indexValues,numRowsPerItteration,totalN
 
 def read_data(data_path, train_path, validation_path, test_path):
 
-    print(data_path)
-    print(train_path)
-    print(validation_path)
-    print(test_path)
+    # print(data_path)
+    # print(train_path)
+    # print(validation_path)
+    # print(test_path)
     
     #get the ids
     try:
@@ -98,7 +108,7 @@ def read_data(data_path, train_path, validation_path, test_path):
         validationIndeces = pd.read_csv(validation_path, header = None)
         testingIndeces = pd.read_csv(test_path, header = None)
     except:
-        print("There were not 1000000 data points")
+        # print("There were not 1000000 data points")
         trainIndeces = generateNIndecesFrom(1000000,list(twoMIndeces['Index']))
         trainIndeces.to_csv('train_ids.txt',index=False,header=False)
 
@@ -131,25 +141,30 @@ def read_data(data_path, train_path, validation_path, test_path):
 
     # print("No 750k collection")
     test750k = pd.DataFrame()
-    test750k = generateSubSet(data_path,test750k,validationIndeces,4000000,46000000,column_headers)
+    test750k = generateSubSet(data_path,test750k,testingIndeces,4000000,46000000,column_headers)
     
     
-    print(train1M.shape)
-    print(validation250k.shape)
-    print(test750k.shape)
+    # print(train1M.shape)
+    # print(validation250k.shape)
+    # print(test750k.shape)
 
     # train_data, train_target = np.zeros((1000000, 39)), np.zeros((1000000,))
     # validation_data, validation_target = np.zeros((250000, 39)), np.zeros((250000,))
     # test_data, test_target = np.zeros((750000, 39)), np.zeros((750000,))
 
 
-    return train1M[train1M.columns[1:40]], train1M['label'].values(), validation250k[validation250k.columns[1:40]], validation250k['label'].values(), test750k[test750k.columns[1:40]], test750k['label'].values()
+    return train1M[train1M.columns[1:40]].values, train1M['label'].values, validation250k[validation250k.columns[1:40]].values, validation250k['label'].values, test750k[test750k.columns[1:40]].values, test750k['label'].values
 #     return 
 
 def preprocess_int_data(data, features):
     n = len([f for f in features if f < 13])
+    print(n)
+    print(data)
+    dataFrame = pd.DataFrame(data)
+    print(dataFrame.head())
     return np.zeros((data.shape[0], n))
 
 
 def preprocess_cat_data(data, features, preprocess):
+    print(data)
     return None

@@ -3,6 +3,9 @@ import pandas as pd
 import random
 import re
 import itertools
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.externals import joblib 
 
 # Additional helper functions required for the code to run:
 # This function defines the column headers for the data frames
@@ -15,6 +18,16 @@ def getColumnHeaders():
                                  'categorical_12','categorical_13','categorical_14','categorical_15','categorical_16',
                                  'categorical_17','categorical_18','categorical_19','categorical_20','categorical_21',
                                  'categorical_22','categorical_23','categorical_24','categorical_25','categorical_26','Index'])
+
+def getDataHeaders():
+    return pd.Series(data=['integer_1','integer_2','integer_3',
+                                 'integer_4','integer_5','integer_6','integer_7','integer_8','integer_9',
+                                 'integer_10','integer_11','integer_12','integer_13','categorical_1',
+                                 'categorical_2','categorical_3','categorical_4','categorical_5','categorical_6',
+                                 'categorical_7','categorical_8','categorical_9','categorical_10','categorical_11',
+                                 'categorical_12','categorical_13','categorical_14','categorical_15','categorical_16',
+                                 'categorical_17','categorical_18','categorical_19','categorical_20','categorical_21',
+                                 'categorical_22','categorical_23','categorical_24','categorical_25','categorical_26'])
 
 # this function generateNIndecesFrom takes a range of Indeces and randomly takes n of them, returns a pandas Series object
 def generateNIndecesFrom(n, rangeOfIndeces):
@@ -33,9 +46,11 @@ def generateSummaryStatsAndHists(train1M):
     for col in train1M.columns:
         if (col != 'label' and col != 'Index' and col != 'Unnamed: 0'):
 
-            train1M[col].value_counts().plot(kind='hist',title=col, bins=100)
+            train1M[col][train1M['label'] == 0].value_counts().plot(kind='hist',title=col, bins=100,label='0s')
+            train1M[col][train1M['label'] == 1].value_counts().plot(kind='hist',title=col, bins=100,label='1s')
+            plt.legend(loc='upper right')
             plt.savefig(col)
-            plt.show()
+#             plt.show()
             plt.gcf().clear()
             if (train1M[col].dtype != 'O'):
                 SummaryStats[col] = train1M[col].describe()   
@@ -66,9 +81,9 @@ def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,
         
         dataFrame = pd.concat([dataFrame,curData])
         
-        clear_output()
-        print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
-        print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
+#         clear_output()
+#         print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
+#         print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
         if (dataFrame.shape[0] - prevsize) > 500000:
             prevsize = dataFrame.shape[0]
       
@@ -80,6 +95,32 @@ def generateAndSaveSubset(file,dataFrame,indexValues,numRowsPerItteration,totalN
     dataFrame.to_csv(frameSaveName)
     return dataFrame
 
+# This method generates the categorical data required to then apply one hot encoding on the entire dataset
+def generateCategoricalData(train1M):
+    #change to categorical
+    for col in train1M.columns[14:40]:
+        train1M[col] = train1M[col].astype('category')
+        # add the dummy category
+        train1M[col].cat.add_categories(new_categories = 'Dummy',inplace = True)
+        categories = pd.Series(train1M[col].cat.categories)
+        categories.to_csv(str(col)+'_features.csv',header = False)
+        #save the categories for each column
+        #then we can set the categegories for each column
+        # and when we get dummies from pandas we have a one hot encoding that is consistent accross
+        # -> get_dummies() method does one hot encoding
+
+# This methods takes the training set and creates a scaler that is fit to the integer columns of the training set then saves
+# The model to file for future retrieval.
+def preProcessIntsAndSave(dataFrame,fileName):
+    dataFrame[dataFrame.columns[1:14]] = dataFrame[dataFrame.columns[1:14]].fillna(0)
+    dataFrame[dataFrame.columns[1:14]] = dataFrame[dataFrame.columns[1:14]].replace(-1,0)
+    dataFrame[dataFrame.columns[1:14]] = dataFrame[dataFrame.columns[1:14]].replace(-2,0)
+    
+    curScaler = StandardScaler()
+    curScaler.fit(dataFrame[dataFrame.columns[1:14]])
+    joblib.dump(curScaler, fileName)
+    return
+        
 def read_data(data_path, train_path, validation_path, test_path):
 
     print(data_path)
@@ -113,7 +154,11 @@ def read_data(data_path, train_path, validation_path, test_path):
     column_headers = getColumnHeaders()
     train1M = pd.DataFrame()
     train1M = generateSubSet(data_path,train1M,trainIndeces,4000000,46000000,column_headers)
-
+    
+    generateSummaryStatsAndHists(train1M)
+    generateCategoricalData(train1M)
+    preProcessIntsAndSave(train1M,'scalerPickle.pkl')
+    
     validation250k = pd.DataFrame()
     validation250k = generateSubSet(data_path,validation250k,validationIndeces,4000000,46000000,column_headers)
 
@@ -129,17 +174,58 @@ def read_data(data_path, train_path, validation_path, test_path):
 
 def preprocess_int_data(data, features):
     n = len([f for f in features if f < 13])
+#     print([f for f in features if f < 13])
 #     print(n)
-#     print(data)
-    dataFrame = pd.DataFrame(data)
+#     print(features)
+#     print(data[:,:13])
+    dataFrame = pd.DataFrame()
+    for f in features:
+        if f < 13:
+#             print(f)
+            dataFrame = pd.concat([dataFrame, pd.DataFrame(data[:,f:f+1])],axis=1)
+    
+#     print(dataFrame.shape)
+    headers = getDataHeaders()
+    trueHeaders = []
+    for f in features:
+        if f < 13:
+            trueHeaders.append(headers[f])
+    
+    dataFrame.columns = trueHeaders
+#     print(trueHeaders)
+    
 #     print(dataFrame.head())
-    dataFrame[dataFrame.columns[0:13]] = dataFrame[dataFrame.columns[0:13]].fillna(0)
-    dataFrame[dataFrame.columns[0:13]] = dataFrame[dataFrame.columns[0:13]].replace(-1,0)
-    dataFrame[dataFrame.columns[0:13]] = dataFrame[dataFrame.columns[0:13]].replace(-2,0)
-#     print(dataFrame[dataFrame.columns[0:13]])
-    return np.zeros((data.shape[0], n))
+
+    for f in features:
+        if f < 13:
+#         print(f)
+#         print(dataFrame[dataFrame.columns[f]])
+            dataFrame[dataFrame.columns[f]] = dataFrame[dataFrame.columns[f]].fillna(0)
+            dataFrame[dataFrame.columns[f]] = dataFrame[dataFrame.columns[f]].replace(-1,0)
+            dataFrame[dataFrame.columns[f]] = dataFrame[dataFrame.columns[f]].replace(-2,0)
+
+    scaler = joblib.load('scalerPickle.pkl') 
+#     print(dataFrame[dataFrame.columns[features]])
+    scaledValues = scaler.transform(dataFrame)
+#     print(pd.DataFrame(scaledValues,columns=trueHeaders))
+
+    return scaledValues
 
 
 def preprocess_cat_data(data, features, preprocess):
     print(data)
+    print(features)
+    dataFrame = pd.DataFrame(data)
+    print(dataFrame[dataFrame.columns[13:39]])
+    # Change each column in the 13-39 into categorical
+    dataFrame.columns = getDataHeaders()
+    
+    # drop the cols that are not in the features vector
+    
+    for col in dataFrame.columns[13:39]:
+        dataFrame[col] = dataFrame[col].astype('category')
+        #reset the categories to the ones for that column
+        curFeatures = pd.read_csv(str(col) + "_features.csv",header = None,index_col = 0)
+        print(curFeatures.values)
+#     dataFrame[dataFrame.columns[13:39]] = dataFrame[dataFrame.columns[13:39]].fillna('Dummy')
     return None

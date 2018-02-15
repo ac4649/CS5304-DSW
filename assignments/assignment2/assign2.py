@@ -123,10 +123,10 @@ def preProcessIntsAndSave(dataFrame,fileName):
         
 def read_data(data_path, train_path, validation_path, test_path):
 
-    print(data_path)
-    print(train_path)
-    print(validation_path)
-    print(test_path)
+    # print(data_path)
+    # print(train_path)
+    # print(validation_path)
+    # print(test_path)
     
     #get the ids
     try:
@@ -213,19 +213,33 @@ def preprocess_int_data(data, features):
 
 
 def preprocess_cat_data(data, features, preprocess):
-    print(data)
     print(features)
+    print(preprocess)
+    print(data)
     dataFrame = pd.DataFrame(data)
-    print(dataFrame[dataFrame.columns[13:39]])
+#     print(dataFrame[dataFrame.columns[13:39]])
     # Change each column in the 13-39 into categorical
-    dataFrame.columns = getDataHeaders()
+#     dataFrame.columns = getDataHeaders()
     
     # drop the cols that are not in the features vector
+    for col in dataFrame.columns:
+        foundCol = False
+        for f in features:
+            if (f == col + 12):
+                foundCol = True
+                
+        if not foundCol:
+            dataFrame.drop(col)
+        # I know that the categorical features start at 1 and index 13 so add 12 to f
     
-    for col in dataFrame.columns[13:39]:
-        dataFrame[col] = dataFrame[col].astype('category')
-        #reset the categories to the ones for that column
-        curFeatures = pd.read_csv(str(col) + "_features.csv",header = None,index_col = 0)
-        print(curFeatures.values)
+    dataFrame.head()
+    
+#     for col in dataFrame.columns[13:39]:
+#         dataFrame[col] = dataFrame[col].astype('category')
+#         #reset the categories to the ones for that column
+#         curFeatures = pd.read_csv(str(col) + "_features.csv",header = None,index_col = 0)
+        
+#         dataFrame[col].cat.set_categories(curFeatures.values)
+#         pd.get_dummies(train1M[col],prefix=['encoded'],sparse=True)
 #     dataFrame[dataFrame.columns[13:39]] = dataFrame[dataFrame.columns[13:39]].fillna('Dummy')
     return None

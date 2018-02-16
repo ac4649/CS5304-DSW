@@ -102,17 +102,14 @@ def generateCategoricalData(train1M):
     for col in train1M.columns[14:40]:
         train1M[col] = train1M[col].astype('category')
         
-        #get only the top 10 categories with highest count
+        #get only the top 30 categories with highest count
         averageNumber = train1M[col].value_counts().mean()
 #         print(averageNumber)
         counts = train1M[col].value_counts()
-# #         print(counts)
-#         if (averageNumber < 10):
-#             # if the average counte is less than 10, just take the first 20 categories
-#             topFeatures = train1M[col].value_counts()[:20].index
-#         else:
-        topFeatures = train1M[col].value_counts()[train1M[col].value_counts() > averageNumber].index
+#        print(counts)
+        topFeatures = train1M[col].value_counts()[:30].index
 
+#         topFeatures = train1M[col].value_counts()[train1M[col].value_counts() > averageNumber].index
 #         print(topFeatures)
         
         # add the dummy category
@@ -170,6 +167,9 @@ def read_data(data_path, train_path, validation_path, test_path):
     column_headers = getColumnHeaders()
     train1M = pd.DataFrame()
     train1M = generateSubSet(data_path,train1M,trainIndeces,4000000,46000000,column_headers)
+    
+    print("train1M done")
+    
 #     return train1M
     generateSummaryStatsAndHists(train1M)
     generateCategoricalData(train1M)
@@ -178,9 +178,12 @@ def read_data(data_path, train_path, validation_path, test_path):
     validation250k = pd.DataFrame()
     validation250k = generateSubSet(data_path,validation250k,validationIndeces,4000000,46000000,column_headers)
 
+    print("Validation done")
+    
     test750k = pd.DataFrame()
     test750k = generateSubSet(data_path,test750k,testingIndeces,4000000,46000000,column_headers)
     
+    print("test done")
     
 #     print(train1M.shape)
 #     print(validation250k.shape)
@@ -239,7 +242,7 @@ def preprocess_cat_data(data, features, preprocess):
         else:    
             # I know that the categorical features start at 1 and index 13 so add 12 to f
             if (col > 12):
-                print(col)
+#                 print(col)
 #                 print(dataFrame[col].dtype)
                 dataFrame[col] = dataFrame[col].astype('category')
                 curFeatures = pd.read_csv("categorical_" + str(col-12) + "_features.csv",header = None,index_col = 0)
@@ -249,10 +252,10 @@ def preprocess_cat_data(data, features, preprocess):
                 dataFrame[col] = dataFrame[col].fillna('Dummy')
 #                 print(dataFrame[col].dtype)
 # #                 print(dataFrame[col].cat.categories)
-                onehotVals = pd.get_dummies(dataFrame[col],prefix='encoded_'+ str(col) + "_",sparse=True)
-                print(onehotVals.info())
+                onehotVals = pd.get_dummies(dataFrame[col],prefix='encoded_'+ str(col) + "_",sparse=True,columns = curFeatures)
+#                 print(onehotVals.info())
                 returnFrame = pd.concat([returnFrame, onehotVals],axis=1)
-                print("Got 1hot for " + str(col))
+#                 print("Got 1hot for " + str(col))
 #                 print(returnFrame.info())
 #                 return
     
@@ -268,4 +271,7 @@ def preprocess_cat_data(data, features, preprocess):
 #         dataFrame[col].cat.set_categories(curFeatures.values)
 #         pd.get_dummies(train1M[col],prefix=['encoded'],sparse=True)
 #     dataFrame[dataFrame.columns[13:39]] = dataFrame[dataFrame.columns[13:39]].fillna('Dummy')
-    return returnFrame.values
+#     print(returnFrame.head())
+    print(returnFrame.shape)
+    print(returnFrame.columns)
+    return returnFrame.to_coo()

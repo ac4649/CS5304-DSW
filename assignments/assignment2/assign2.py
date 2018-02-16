@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.externals import joblib 
 
+
 # Additional helper functions required for the code to run:
 # This function defines the column headers for the data frames
 def getColumnHeaders():
@@ -31,7 +32,6 @@ def getDataHeaders():
 
 # this function generateNIndecesFrom takes a range of Indeces and randomly takes n of them, returns a pandas Series object
 def generateNIndecesFrom(n, rangeOfIndeces):
-    # print("Generating " + str(n) + " indeces from range")
     allIndeces = random.sample(rangeOfIndeces, n)
     allIndeces = pd.Series(data = allIndeces)
     allIndeces = allIndeces.sort_values().reset_index().drop(['index'],axis=1)
@@ -50,11 +50,10 @@ def generateSummaryStatsAndHists(train1M):
             train1M[col][train1M['label'] == 1].value_counts().plot(kind='hist',title=col, bins=100,label='1s')
             plt.legend(loc='upper right')
             plt.savefig(col)
-#             plt.show()
             plt.gcf().clear()
+
             if (train1M[col].dtype != 'O'):
                 SummaryStats[col] = train1M[col].describe()   
-    # SummaryStats.head()
     SummaryStats.to_csv('integerStats.csv')
     return SummaryStats
 
@@ -63,7 +62,7 @@ def generateSummaryStatsAndHists(train1M):
 # a number of rows per itteration (this is used to not overload the memory) , total number of rows in the file, the column headers for the new dataframe
 def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,column_headers):
     totalNumIterations = int(totalNumRows/numRowsPerItteration)
-    # print("Number of itterations = " + str(totalNumIterations))
+
     totalNumRowsTraversed = 0
     prevsize = 0
     for i in range(totalNumIterations + 1):
@@ -81,8 +80,7 @@ def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,
         
         dataFrame = pd.concat([dataFrame,curData])
         
-#         clear_output()
-        print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
+        # print("Extraction Stats: " + str(dataFrame.shape[0]) + " percent: " + str(dataFrame.shape[0] / indexValues.shape[0] * 100) + "%")
 #         print("Document Stats: " + str(totalNumRowsTraversed) + " percent: " + str(totalNumRowsTraversed/totalNumRows*100) + "%")
         if (dataFrame.shape[0] - prevsize) > 500000:
             prevsize = dataFrame.shape[0]
@@ -101,8 +99,8 @@ def generateCategoricalData(train1M):
     for col in train1M.columns[14:40]:
         train1M[col] = train1M[col].astype('category')
         
-        #get only the top 10 categories with highest count
-        averageNumber = train1M[col].value_counts().mean()
+        #get only take first 30 categories (this is based on looking at the histograms)
+        # averageNumber = train1M[col].value_counts()
 #         print(averageNumber)
         counts = train1M[col].value_counts()
 # #         print(counts)
@@ -110,14 +108,14 @@ def generateCategoricalData(train1M):
 #             # if the average counte is less than 10, just take the first 20 categories
 #             topFeatures = train1M[col].value_counts()[:20].index
 #         else:
-        topFeatures = train1M[col].value_counts()[train1M[col].value_counts() > averageNumber].index
+        topFeatures = counts[:30].index
 
 #         print(topFeatures)
         
         # add the dummy category
 #         train1M[col].cat.add_categories(new_categories = 'Dummy',inplace = True)
         categories = pd.Series(topFeatures)
-        print(categories.shape)
+        # print(categories.shape)
         categories.to_csv(str(col)+'_features.csv',header = False)
         #save the categories for each column
         #then we can set the categegories for each column
@@ -270,4 +268,4 @@ def preprocess_cat_data(data, features, preprocess):
 #         dataFrame[col].cat.set_categories(curFeatures.values)
 #         pd.get_dummies(train1M[col],prefix=['encoded'],sparse=True)
 #     dataFrame[dataFrame.columns[13:39]] = dataFrame[dataFrame.columns[13:39]].fillna('Dummy')
-    return returnFrame.values
+    return dataFrame.values

@@ -47,12 +47,15 @@ def generateSummaryStatsAndHists(train1M):
     for col in train1M.columns:
         if (col != 'label' and col != 'Index' and col != 'Unnamed: 0'):
 
-            train1M[col][train1M['label'] == 0].value_counts().plot(kind='hist',title=col, bins=100,label='0s')
-            train1M[col][train1M['label'] == 1].value_counts().plot(kind='hist',title=col, bins=100,label='1s')
-            plt.legend(loc='upper right')
-            plt.savefig(col)
+            # these should be commented out when run on jupyter to generate the graphs
+            # not tested on regular python:
+
+            # train1M[col][train1M['label'] == 0].value_counts().plot(kind='hist',title=col, bins=100,label='0s')
+            # train1M[col][train1M['label'] == 1].value_counts().plot(kind='hist',title=col, bins=100,label='1s')
+            # plt.legend(loc='upper right')
+            # plt.savefig(col)
 #             plt.show()
-            plt.gcf().clear()
+            # plt.gcf().clear()
             if (train1M[col].dtype != 'O'):
                 SummaryStats[col] = train1M[col].describe()   
     # SummaryStats.head()
@@ -64,7 +67,6 @@ def generateSummaryStatsAndHists(train1M):
 # a number of rows per itteration (this is used to not overload the memory) , total number of rows in the file, the column headers for the new dataframe
 def generateSubSet(file,dataFrame,indexValues,numRowsPerItteration,totalNumRows,column_headers):
     totalNumIterations = int(totalNumRows/numRowsPerItteration)
-    # print("Number of itterations = " + str(totalNumIterations))
     totalNumRowsTraversed = 0
     prevsize = 0
     for i in range(totalNumIterations + 1):
@@ -102,20 +104,16 @@ def generateCategoricalData(train1M):
     for col in train1M.columns[14:40]:
         train1M[col] = train1M[col].astype('category')
         
-        #get only the top 30 categories with highest count
-        averageNumber = train1M[col].value_counts().mean()
-#         print(averageNumber)
-        counts = train1M[col].value_counts()
-#        print(counts)
-        topFeatures = train1M[col].value_counts()[:30].index
+        #get only the top 30 categories with highest count, only 30 because of memory and time limitations.
+        # ideally would want to do something like compute the mean count
+        #  and take only the values of categories with more than the mean count
 
+        averageNumber = train1M[col].value_counts().mean()
+        counts = train1M[col].value_counts()
+        topFeatures = train1M[col].value_counts()[:30].index
 #         topFeatures = train1M[col].value_counts()[train1M[col].value_counts() > averageNumber].index
-#         print(topFeatures)
         
-        # add the dummy category
-#         train1M[col].cat.add_categories(new_categories = 'Dummy',inplace = True)
         categories = pd.Series(topFeatures)
-#         print(categories.shape)
         categories.to_csv(str(col)+'_features.csv',header = False)
         #save the categories for each column
         #then we can set the categegories for each column
@@ -136,11 +134,6 @@ def preProcessIntsAndSave(dataFrame,fileName):
         
 def read_data(data_path, train_path, validation_path, test_path):
 
-#     print(data_path)
-#     print(train_path)
-#     print(validation_path)
-#     print(test_path)
-    
     #get the ids
     try:
         trainIndeces = pd.read_csv(train_path, header = None)
@@ -170,7 +163,6 @@ def read_data(data_path, train_path, validation_path, test_path):
     
     print("train1M done")
     
-#     return train1M
     generateSummaryStatsAndHists(train1M)
     generateCategoricalData(train1M)
     preProcessIntsAndSave(train1M,'scalerPickle.pkl')
@@ -185,9 +177,6 @@ def read_data(data_path, train_path, validation_path, test_path):
     
     print("test done")
     
-#     print(train1M.shape)
-#     print(validation250k.shape)
-#     print(test750k.shape)
 
     return train1M[train1M.columns[1:40]].values, train1M['label'].values, validation250k[validation250k.columns[1:40]].values, validation250k['label'].values, test750k[test750k.columns[1:40]].values, test750k['label'].values
 
@@ -221,13 +210,8 @@ def preprocess_int_data(data, features):
 
 
 def preprocess_cat_data(data, features, preprocess):
-#     print(features)
-#     print(preprocess)
-#     print(data)
+
     dataFrame = pd.DataFrame(data)
-#     print(dataFrame[dataFrame.columns[13:39]])
-    # Change each column in the 13-39 into categorical
-#     dataFrame.columns = getDataHeaders()
     
     returnFrame = pd.SparseDataFrame()
     # drop the cols that are not in the features vector
@@ -242,36 +226,25 @@ def preprocess_cat_data(data, features, preprocess):
         else:    
             # I know that the categorical features start at 1 and index 13 so add 12 to f
             if (col > 12):
-#                 print(col)
-#                 print(dataFrame[col].dtype)
+
+                # make the dataframe of categorical features actually categorical and not strings
                 dataFrame[col] = dataFrame[col].astype('category')
+
+                # load the selected values from the saved file (saved during loading of file)
                 curFeatures = pd.read_csv("categorical_" + str(col-12) + "_features.csv",header = None,index_col = 0)
-#                 print(curFeatures.values)
-                dataFrame[col].cat.set_categories(curFeatures.values)
+
+                #set the categories onto the current dataframe
+                dataFrame[col].cat.set_categories(curFeatures.values, inplace = True)
+
+                #any non-categorized (not part of the loaded values are going to be dummies)
                 dataFrame[col].cat.add_categories(new_categories = 'Dummy',inplace = True)
                 dataFrame[col] = dataFrame[col].fillna('Dummy')
-#                 print(dataFrame[col].dtype)
-# #                 print(dataFrame[col].cat.categories)
+
+                #get the on hot encoding for the column using the values loaded as headers
                 onehotVals = pd.get_dummies(dataFrame[col],prefix='encoded_'+ str(col) + "_",sparse=True,columns = curFeatures)
-#                 print(onehotVals.info())
+
+                # concatenate the onhot values for this col with the others.
                 returnFrame = pd.concat([returnFrame, onehotVals],axis=1)
-#                 print("Got 1hot for " + str(col))
-#                 print(returnFrame.info())
-#                 return
     
-#     print(dataFrame.head())
-#     print(dataFrame.info())
-#     print(returnFrame.head())
-    
-#     for col in dataFrame.columns[13:39]:
-#         dataFrame[col] = dataFrame[col].astype('category')
-#         #reset the categories to the ones for that column
-#         
-        
-#         dataFrame[col].cat.set_categories(curFeatures.values)
-#         pd.get_dummies(train1M[col],prefix=['encoded'],sparse=True)
-#     dataFrame[dataFrame.columns[13:39]] = dataFrame[dataFrame.columns[13:39]].fillna('Dummy')
-#     print(returnFrame.head())
-    print(returnFrame.shape)
-    print(returnFrame.columns)
+
     return returnFrame.to_coo()

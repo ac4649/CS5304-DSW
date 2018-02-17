@@ -123,12 +123,17 @@ def generateCategoricalData(train1M):
 # This methods takes the training set and creates a scaler that is fit to the integer columns of the training set then saves
 # The model to file for future retrieval.
 def preProcessIntsAndSave(dataFrame,fileName):
+
+    # fill nas and replace negative numbers by 0
     dataFrame[dataFrame.columns[1:14]] = dataFrame[dataFrame.columns[1:14]].fillna(0)
     dataFrame[dataFrame.columns[1:14]] = dataFrame[dataFrame.columns[1:14]].replace(-1,0)
     dataFrame[dataFrame.columns[1:14]] = dataFrame[dataFrame.columns[1:14]].replace(-2,0)
     
+    #create the standard scaler
     curScaler = StandardScaler()
+    # fit it to the training data (which is the one passed in the dataFrame)
     curScaler.fit(dataFrame[dataFrame.columns[1:14]])
+    # save the pickled object to disk for future reference
     joblib.dump(curScaler, fileName)
     return
         
@@ -140,7 +145,8 @@ def read_data(data_path, train_path, validation_path, test_path):
         validationIndeces = pd.read_csv(validation_path, header = None)
         testingIndeces = pd.read_csv(test_path, header = None)
     except:
-        print("There were not 1000000 data points")
+        print("There were not 1000000 data points, generating new points for everything")
+        twoMIndeces = generateNIndecesFrom(2000000,range(0,45840617)) # this range is because there are this number of records in the training set.
         trainIndeces = generateNIndecesFrom(1000000,list(twoMIndeces['Index']))
         trainIndeces.to_csv('train_ids.txt',index=False,header=False)
 
@@ -161,21 +167,25 @@ def read_data(data_path, train_path, validation_path, test_path):
     train1M = pd.DataFrame()
     train1M = generateSubSet(data_path,train1M,trainIndeces,4000000,46000000,column_headers)
     
-    print("train1M done")
-    
+    # print("train1M done")
+    # Create the summary stats and histograms (the histogram creation works in jupyter notebook but may not work in regular python)
     generateSummaryStatsAndHists(train1M)
+
+    # Select the categories which will be used to one hot encode each data set
     generateCategoricalData(train1M)
+
+    # Create the integers scaler and create the pickled file to load later
     preProcessIntsAndSave(train1M,'scalerPickle.pkl')
     
     validation250k = pd.DataFrame()
     validation250k = generateSubSet(data_path,validation250k,validationIndeces,4000000,46000000,column_headers)
 
-    print("Validation done")
+    # print("Validation done")
     
     test750k = pd.DataFrame()
     test750k = generateSubSet(data_path,test750k,testingIndeces,4000000,46000000,column_headers)
     
-    print("test done")
+    # print("test done")
     
 
     return train1M[train1M.columns[1:40]].values, train1M['label'].values, validation250k[validation250k.columns[1:40]].values, validation250k['label'].values, test750k[test750k.columns[1:40]].values, test750k['label'].values
@@ -183,11 +193,13 @@ def read_data(data_path, train_path, validation_path, test_path):
 def preprocess_int_data(data, features):
     n = len([f for f in features if f < 13])
     
+    #get the integer data into a dataframe
     dataFrame = pd.DataFrame()
     for f in features:
         if f < 13:
             dataFrame = pd.concat([dataFrame, pd.DataFrame(data[:,f:f+1])],axis=1)
 
+    # get the headers for the dataframe (only the integer ones)
     headers = getDataHeaders()
     trueHeaders = []
     for f in features:
@@ -196,6 +208,7 @@ def preprocess_int_data(data, features):
     
     dataFrame.columns = trueHeaders
 
+    # fill nas, and negative numbers with 0s
     for f in features:
         if f < 13:
 
@@ -203,6 +216,7 @@ def preprocess_int_data(data, features):
             dataFrame[dataFrame.columns[f]] = dataFrame[dataFrame.columns[f]].replace(-1,0)
             dataFrame[dataFrame.columns[f]] = dataFrame[dataFrame.columns[f]].replace(-2,0)
 
+    # load the scalar from file and transform the dataFrame (only contains the integers)
     scaler = joblib.load('scalerPickle.pkl') 
     scaledValues = scaler.transform(dataFrame)
     
@@ -210,9 +224,10 @@ def preprocess_int_data(data, features):
 
 
 def preprocess_cat_data(data, features, preprocess):
-
+    # create a dataframe with the data
     dataFrame = pd.DataFrame(data)
     
+    #create a sparse dataframe that contains the one hot encoded values of each column
     returnFrame = pd.SparseDataFrame()
     # drop the cols that are not in the features vector
     for col in dataFrame.columns:

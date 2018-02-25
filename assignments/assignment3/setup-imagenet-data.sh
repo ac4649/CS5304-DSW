@@ -6,11 +6,11 @@ cd ~/data
 echo "Working in `pwd`"
 
 # Clean slate to start
-/bin/rm -rf tiny-imagenet*
+# /bin/rm -rf tiny-imagenet*
 
-tinyimgnet="tiny-imagenet-200.zip"
-curl -O http://cs231n.stanford.edu/$tinyimgnet
-unzip -q $tinyimgnet
+# tinyimgnet="tiny-imagenet-200.zip"
+# curl -O http://cs231n.stanford.edu/$tinyimgnet
+# unzip -q $tinyimgnet
 
 # Create dataset directories
 mkdir -p tiny-imagenet-5/train
@@ -40,3 +40,4 @@ cat tiny-imagenet-200/val/val_annotations.txt | grep n09 > tiny-imagenet-5/val/v
 
 # Go back to original directory
 cd -
+

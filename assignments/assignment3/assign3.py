@@ -161,7 +161,9 @@ if __name__ == '__main__':
     # tensorImageView(out, title=[classNames[x] for x in classes])
 
 
-    testedModels = ['resnet50', 'vgg16', 'resnet34']
+    # testedModels = ['resnet50', 'vgg16', 'resnet34']
+    testedModels = ['resnet34','vgg16']
+
     for curModel in testedModels:
         print("Testing " + curModel + " model")
 

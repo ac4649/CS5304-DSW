@@ -162,7 +162,8 @@ if __name__ == '__main__':
 
 
     # testedModels = ['resnet50', 'vgg16', 'resnet34']
-    testedModels = ['resnet34','vgg16']
+    # testedModels = ['resnet34','vgg16']
+    testedModels = ['vgg16']
 
     for curModel in testedModels:
         print("Testing " + curModel + " model")
@@ -176,8 +177,21 @@ if __name__ == '__main__':
         else:
             print("tested Model not implemented, aborting")
             exit(1)
-        numFeatures = modelFT.fc.in_features
-        modelFT.fc = nn.Linear(numFeatures, 5) # 5 outputs
+        
+        if curModel == 'vgg16':
+            # print(modelFT)
+            numFeatures = modelFT.classifier[0].out_features
+            # modelFT.classifier[6] == nn.Linear(numFeatures,5) # 5 outputs
+            modelClassifiers = list(modelFT.classifier.children())
+            modelClassifiers.pop() # remove the last layer
+            modelClassifiers.append(torch.nn.Linear(numFeatures, 5)) # make new last layer have 5 outputs
+
+            newClassifier = torch.nn.Sequential(*modelClassifiers)
+            modelFT.classifier = newClassifier
+            print(modelFT)
+        else:
+            numFeatures = modelFT.fc.in_features
+            modelFT.fc = nn.Linear(numFeatures, 5) # 5 outputs
 
         if useGpu:
             modelFT = modelFT.cuda()
@@ -206,8 +220,20 @@ if __name__ == '__main__':
         for param in modelConv.parameters():
             param.requires_grad = False
         
-        numFeatures = modelConv.fc.in_features
-        modelConv.fc = nn.Linear(numFeatures, 5)
+        if curModel == 'vgg16':
+            # print(modelConv)
+            numFeatures = modelConv.classifier[0].out_features
+
+            modelClassifiers = list(modelConv.classifier.children())
+            modelClassifiers.pop() # remove the last layer
+            modelClassifiers.append(torch.nn.Linear(numFeatures, 5)) # make new last layer have 5 outputs
+
+            newClassifier = torch.nn.Sequential(*modelClassifiers)
+            modelConv.classifier = newClassifier
+            print(modelConv)
+        else:
+            numFeatures = modelConv.fc.in_features
+            modelConv.fc = nn.Linear(numFeatures, 5)
 
         if useGpu:
             modelConv = modelConv.cuda()

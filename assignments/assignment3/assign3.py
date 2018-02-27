@@ -200,7 +200,7 @@ if __name__ == '__main__':
 
         optimizerFT = optim.SGD(modelFT.parameters(), lr=0.001, momentum=0.9)
         
-        expScheduler = lr_scheduler.StepLR(optimizerFT, step_size = 2, gamma=0.1)
+        expScheduler = lr_scheduler.StepLR(optimizerFT, step_size = 7, gamma=0.1)
 
 
         modelFT = trainModel(modelFT, criterion, optimizerFT, expScheduler, numEpochs=50)
@@ -241,7 +241,7 @@ if __name__ == '__main__':
         criterion = nn.CrossEntropyLoss()
 
         optimizerConv = optim.SGD(modelConv.fc.parameters(),lr = 0.001, momentum = 0.9)
-        expConvScheduler = lr_scheduler.StepLR(optimizerConv,step_size=2, gamma=0.1)
+        expConvScheduler = lr_scheduler.StepLR(optimizerConv,step_size=7, gamma=0.1)
 
         modelConv = trainModel(modelConv,criterion,optimizerConv,expConvScheduler,numEpochs=50)
         torch.save(modelFT.state_dict(),'modelConv' + curModel + '.pt') #save the model

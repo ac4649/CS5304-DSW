@@ -31,8 +31,8 @@ To write test predictions:
 
 """
 
-import argparse
 
+import argparse
 import os
 import sys
 import json
@@ -45,6 +45,12 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
+
+import nltk
+from nltk.corpus import stopwords
+# from nltk.tokenize import word_tokenize
+
+import pandas as pd
 
 
 PAD_TOKEN = '_PAD_'

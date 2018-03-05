@@ -71,6 +71,51 @@ def sentiment2label(x):
     raise ValueError('Improper sentiment value {}'.format(x))
 
 
+def lemmatizeWord(word,lemmatizer,position='n'):
+    #this function lemmatizes the word given
+    
+    newWord = lemmatizer.lemmatize(word,pos=position)
+    
+    if position == 'n':
+        nextPosition = 'v'
+    elif position == 'v':
+        nextPosition = 'a'
+    elif position == 'a':
+        nextPosition = 'r'
+    else:
+        return newWord
+    
+    if newWord == word:
+        #nothing changed, try something else
+        newWord = lemmatizeWord(word,lemmatizer,nextPosition)
+        
+    
+    return newWord
+
+def removeStopWords(wordVector):
+    noStop = list(filter(lambda x: x not in nltk.corpus.stopwords.words('english'), wordVector))
+    print(noStop)
+    return noStop
+
+# This function will do all of the stemming, lemmatization,
+# removal of stop words and other things required for the generation of vocab
+def tokenizePhrase(phrase):
+    lemmatizer = nltk.stem.wordnet.WordNetLemmatizer()
+    
+#     print(phrase)
+    stop_words = set(stopwords.words('english'))
+    phraseWords = phrase.split(' ')
+
+    returnTokens = [] 
+    for word in phraseWords:
+        newWord = lemmatizeWord(word,lemmatizer)
+        returnTokens.append(newWord)
+        
+    print(returnTokens)
+    returnTokens = removeStopWords(returnTokens)
+        
+    return returnTokens
+
 def read_dictionary_txt_with_phrase_ids(dictionary_path, phrase_ids_path, labels_path=None):
   print('Reading data dictionary_path={} phrase_ids_path={} labels_path={}'.format(
     dictionary_path, phrase_ids_path, labels_path))
@@ -90,7 +135,7 @@ def read_dictionary_txt_with_phrase_ids(dictionary_path, phrase_ids_path, labels
 
       example = dict()
       example['phrase'] = phrase.replace('(', '-LRB').replace(')', '-RRB-')
-      example['tokens'] = example['phrase'].split(' ')
+      example['tokens'] = tokenizePhrase(example['phrase'])
       example['example_id'] = phrase_id
       example['label'] = None
       examples_dict[example['example_id']] = example
@@ -272,6 +317,10 @@ class BagOfWordsModel(nn.Module):
 
   def forward(self, x):
     return self.classify(self.embed(x).sum(1))
+
+
+
+
 
 
 # Utility Methods

@@ -100,7 +100,7 @@ def lemmatizeWord(word,lemmatizer,position='n'):
 
 def removeStopWords(wordVector):
     noStop = list(filter(lambda x: x not in nltk.corpus.stopwords.words('english'), wordVector))
-    print(noStop)
+#     print(noStop)
     return noStop
 
 # This function will do all of the stemming, lemmatization,
@@ -117,7 +117,7 @@ def tokenizePhrase(phrase):
         newWord = lemmatizeWord(word,lemmatizer)
         returnTokens.append(newWord)
         
-    print(returnTokens)
+    # print(returnTokens)
     returnTokens = removeStopWords(returnTokens)
         
     return returnTokens

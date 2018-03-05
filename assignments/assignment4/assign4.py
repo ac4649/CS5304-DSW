@@ -325,8 +325,41 @@ class BagOfWordsModel(nn.Module):
     return self.classify(self.embed(x).sum(1))
 
 
+# Train a CNN Sentiment Classifier using pre-trained
+# and frozen skip-gram word2vec as your word embedding
+# on the Sentiment data from above
+class CNNClassifier(nn.Module):
+
+    def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(3, 4, 5), dropout=0.5):
+        super(CNNClassifier,self).__init__()
+
+        self.embedding = nn.Embedding(vocab.shape[0], embeddings.shape[0])
+        self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[0])) for K in kernel_sizes])
+
+        # kernal_size = (K,D) 
+        self.dropout = nn.Dropout(dropout)
+        self.fc = nn.Linear(len(kernel_sizes) * kernel_dim, output_size)
+    
+    
+    def init_weights(self, pretrained_word_vectors, is_static=False):
+        self.embedding.weight = nn.Parameter(torch.from_numpy(pretrained_word_vectors).float())
+        if is_static:
+            self.embedding.weight.requires_grad = False
 
 
+    def forward(self, inputs, is_training=False):
+        inputs = self.embedding(inputs).unsqueeze(1) # (B,1,T,D)
+        inputs = [F.relu(conv(inputs)).squeeze(3) for conv in self.convs] #[(N,Co,W), ...]*len(Ks)
+        inputs = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in inputs] #[(N,Co), ...]*len(Ks)
+
+        concated = torch.cat(inputs, 1)
+
+        if is_training:
+            concated = self.dropout(concated) # (N,len(Ks)*Co)
+        out = self.fc(concated) 
+        return F.log_softmax(out,1)
+
+  
 
 
 # Utility Methods

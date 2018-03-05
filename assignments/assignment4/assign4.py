@@ -418,7 +418,7 @@ def run_test(model, dataset, options):
 def run(options):
   train_data, validation_data, test_data, vocab, embeddings = \
     load_data_and_embeddings(options.data, options.ids, options.embeddings)
-  model = BagOfWordsModel(embeddings)
+  model = CNNClassifier(vocab, embeddings, 2)
   opt = optim.SGD(model.parameters(), lr=3e-4)
   
   step = 0

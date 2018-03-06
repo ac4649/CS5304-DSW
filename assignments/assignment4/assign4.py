@@ -106,6 +106,10 @@ def removeStopWords(wordVector):
 # This function will do all of the stemming, lemmatization,
 # removal of stop words and other things required for the generation of vocab
 def tokenizePhrase(phrase):
+
+    # need to make sure that the output tokens 
+    # is as large as the embeddings so that we don't have kernel errors
+
     lemmatizer = nltk.stem.wordnet.WordNetLemmatizer()
     
 #     print(phrase)
@@ -466,7 +470,7 @@ if __name__ == '__main__':
   parser.add_argument('--log_every', default=100, type=int)
   parser.add_argument('--eval_every', default=1000, type=int)
   parser.add_argument('--batch_size', default=32, type=int)
-  parser.add_argument('--eval_only_mode', action='store_false')
+  parser.add_argument('--eval_only_mode', action='store_true')
   options = parser.parse_args()
 
   print(json.dumps(options.__dict__, sort_keys=True, indent=4))

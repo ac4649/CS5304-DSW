@@ -330,10 +330,12 @@ class BagOfWordsModel(nn.Module):
 # on the Sentiment data from above
 class CNNClassifier(nn.Module):
 
+
+
     def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(3, 4, 5), dropout=0.5):
         super(CNNClassifier,self).__init__()
 
-        self.embedding = nn.Embedding(vocab.shape[0], embeddings.shape[0])
+        self.embedding = nn.Embedding(len(vocab), embeddings.shape[0])
         self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[0])) for K in kernel_sizes])
 
         # kernal_size = (K,D) 
@@ -418,7 +420,7 @@ def run_test(model, dataset, options):
 def run(options):
   train_data, validation_data, test_data, vocab, embeddings = \
     load_data_and_embeddings(options.data, options.ids, options.embeddings)
-  model = CNNClassifier(vocab, embeddings, 2)
+  model = CNNClassifier(vocab, embeddings, 5)
   opt = optim.SGD(model.parameters(), lr=3e-4)
   
   step = 0

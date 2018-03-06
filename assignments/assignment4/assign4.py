@@ -466,7 +466,7 @@ if __name__ == '__main__':
   parser.add_argument('--log_every', default=100, type=int)
   parser.add_argument('--eval_every', default=1000, type=int)
   parser.add_argument('--batch_size', default=32, type=int)
-  parser.add_argument('--eval_only_mode', action='store_true')
+  parser.add_argument('--eval_only_mode', action='store_false')
   options = parser.parse_args()
 
   print(json.dumps(options.__dict__, sort_keys=True, indent=4))

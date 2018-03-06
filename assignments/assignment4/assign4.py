@@ -332,7 +332,7 @@ class CNNClassifier(nn.Module):
 
 
 
-    def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(3,3,3), dropout=0.5):
+    def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(3, 3, 3), dropout=0.5):
         super(CNNClassifier,self).__init__()
 
         self.embedding = nn.Embedding(len(vocab), embeddings.shape[0])

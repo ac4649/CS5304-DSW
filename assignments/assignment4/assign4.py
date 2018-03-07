@@ -461,6 +461,12 @@ def run(options):
 
 
 if __name__ == '__main__':
+
+  # Set a seed for numpy, pytorch
+  np.random.seed(0)
+  torch.manual_seed(0)
+  
+
   parser = argparse.ArgumentParser()
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)

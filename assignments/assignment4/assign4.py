@@ -217,16 +217,17 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
 
   if useEmbeddingNumber == 1:
     # use embdding for glove
-    vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=True)
+    vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=False)
   elif useEmbeddingNumber == 2:
     # use embdding for word2vec (google)
-    vocab, embeddings = load_embeddings(options.embeddings1, vocab, cache=True)
+    vocab, embeddings = load_embeddings(options.embeddings1, vocab, cache=False)
   elif useEmbeddingNumber == 3:
     # if we are doing double embeding then run it on both and concatenate the results
-    vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=True)
-    vocab2, embeddings2 = load_embeddings(options.embeddings1, vocab, cache=True)
-    vocab = np.concat(vocab1,vocab2)
-    embeddings = np.concat(embeddings1,embeddings2)
+    vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=False)
+    vocab2, embeddings2 = load_embeddings(options.embeddings1, vocab, cache=False)
+    vocab = {**vocab1,**vocab2}
+    
+    embeddings = {**embeddings1,**embeddings2}
 
 
 

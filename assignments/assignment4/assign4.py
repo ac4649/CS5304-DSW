@@ -464,7 +464,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
-  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
+  parser.add_argument('--embeddings', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type=str)
   parser.add_argument('--model', default=os.path.join(mydir, 'model.ckpt'), type=str)
   parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions.txt'), type=str)
   parser.add_argument('--log_every', default=100, type=int)

@@ -245,14 +245,14 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
 
   if options.useEmbeddingNumber == 1:
     # use embdding for glove
-    vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=False)
+    vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=True)
   elif options.useEmbeddingNumber == 2:
     # use embdding for word2vec (google)
-    vocab, embeddings = load_embeddings(options.embeddings2, vocab, cache=False)
+    vocab, embeddings = load_embeddings(options.embeddings2, vocab, cache=True)
   elif options.useEmbeddingNumber == 3:
     # if we are doing double embeding then run it on both and concatenate the results
-    vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=False)
-    vocab2, embeddings2 = load_embeddings(options.embeddings2, vocab, cache=False)
+    vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=True)
+    vocab2, embeddings2 = load_embeddings(options.embeddings2, vocab, cache=True)
 
     #Merge the vocabs and embeddings
     #append ----300 Glove ---- ---- 300 word2vec ----
@@ -518,7 +518,7 @@ def run(options):
 
     if step == options.maxNumSteps:
       print('Completed Training with step={} best_val_err={}.'.format(step, best_val_err))
-      checkpoint_model(step, val_err, model, opt, options.model)
+      # checkpoint_model(step, val_err, model, opt, options.model)
       break
     
     step += 1
@@ -548,7 +548,7 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 30000, type = int)
+  parser.add_argument('--maxNumSteps', default = 15000, type = int)
 
 
 
@@ -559,6 +559,10 @@ if __name__ == '__main__':
   run(options)
 
 # only word2vec
+
+  # Set a seed for numpy, pytorch
+  np.random.seed(0)
+  torch.manual_seed(0)
 
 
   parser = argparse.ArgumentParser()
@@ -577,7 +581,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 30000, type = int)
+  parser.add_argument('--maxNumSteps', default = 15000, type = int)
 
 
 
@@ -590,6 +594,10 @@ if __name__ == '__main__':
 
 
 # both word2vec and glove
+
+  # Set a seed for numpy, pytorch
+  np.random.seed(0)
+  torch.manual_seed(0)
 
   parser = argparse.ArgumentParser()
   parser.add_argument('--ids', default=mydir, type=str)
@@ -607,7 +615,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 30000, type = int)
+  parser.add_argument('--maxNumSteps', default = 15000, type = int)
 
 
 

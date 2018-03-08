@@ -407,7 +407,7 @@ class CNNClassifier(nn.Module):
 
         # kernel_sizes should now be working
 
-        self.embedding = nn.Embedding(len(vocab), embeddings.shape[0])
+        self.embedding = nn.Embedding(len(vocab), embeddings.shape[0]) # may need to change to 1 for cuda
         self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[0])) for K in kernel_sizes])
 
         # kernal_size = (K,D) 

@@ -206,6 +206,18 @@ def convert2ids(data, vocab):
   print('Found {} unknown tokens.'.format(converter.unknown))
   return data
 
+def concatenateVocabsEmbeddings(v1, e1, v2, e2):
+
+  #compare vocabs,
+  # for any word common to both,
+  # 
+  # concatenate both embeddings for that word ([e1['word'] e2['word']])
+  # return combined vocab and embedings
+
+  commonVocab = set(v1, v2)
+  print(commonVocab)
+  return
+
 
 def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
   labels_path = os.path.join(data_path, 'sentiment_labels.txt')
@@ -227,12 +239,8 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
     vocab2, embeddings2 = load_embeddings(options.embeddings1, vocab, cache=False)
 
     #Merge the vocabs and embeddings
-    #append ----300 Glove ---- ---- 300 word2vec -----
-
-
-    vocab = {**vocab1,**vocab2}
-    
-    embeddings = {**embeddings1,**embeddings2}
+    #append ----300 Glove ---- ---- 300 word2vec ----
+    concatenateVocabsEmbeddings(vocab1, embeddings1, vocab2, embeddings2):
 
 
 

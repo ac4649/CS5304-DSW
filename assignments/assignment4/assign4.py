@@ -349,16 +349,20 @@ def batch_iterator(dataset, batch_size, forever=True, maxEpochs=200):
 
   order = init_order()
   numEpochs = 0
-  # while True
-  while numEpochs < maxEpochs:
-    print("Epoch = " + str(numEpochs))
+
+  print("# Batches = " + str(nbatches))
+  print("Batch Size = " + str(batch_size))
+
+  while True:
+  # while numEpochs < maxEpochs:
+    # print("Epoch = " + str(numEpochs))
     for i in range(nbatches):
 
       start = i*batch_size
       end = (i+1)*batch_size
       yield get_batch(start, end)
 
-    numEpochs += 1
+    # numEpochs += 1
 
 
     if nbatches*batch_size < dataset_size:
@@ -511,6 +515,11 @@ def run(options):
         best_val_err = val_err
         print('Checkpointing model step={} best_val_err={}.'.format(step, best_val_err))
         checkpoint_model(step, val_err, model, opt, options.model)
+
+    if step == options.maxNumSteps:
+      print('Completed Training with step={} best_val_err={}.'.format(step, best_val_err))
+      checkpoint_model(step, val_err, model, opt, options.model)
+      break
     
     step += 1
 
@@ -539,6 +548,7 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
+  parser.add_argument('--maxNumSteps', default = 30000, type = int)
 
 
 
@@ -567,6 +577,8 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
+  parser.add_argument('--maxNumSteps', default = 30000, type = int)
+
 
 
   options = parser.parse_args()
@@ -594,6 +606,8 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=3, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
+
+  parser.add_argument('--maxNumSteps', default = 30000, type = int)
 
 
 

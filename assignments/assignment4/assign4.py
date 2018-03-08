@@ -244,13 +244,13 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
   vocab = build_vocab([train_data, validation_data, test_data])
 
   if options.useEmbeddingNumber == 1:
-    # use embdding for glove
+    # use embedding for glove
     vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=True)
   elif options.useEmbeddingNumber == 2:
-    # use embdding for word2vec (google)
+    # use embedding for word2vec (google)
     vocab, embeddings = load_embeddings(options.embeddings2, vocab, cache=True)
   elif options.useEmbeddingNumber == 3:
-    # if we are doing double embeding then run it on both and concatenate the results
+    # if we are doing double embedding then run it on both and concatenate the results
     vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=True)
     vocab2, embeddings2 = load_embeddings(options.embeddings2, vocab, cache=True)
 
@@ -258,6 +258,9 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
     #append ----300 Glove ---- ---- 300 word2vec ----
     vocab, embeddings = concatenateVocabsEmbeddings(vocab1, embeddings1, vocab2, embeddings2)
 
+  else:
+    print("Embedding mode not support, please specify one of the options (1,2,3), reverting to standard embeddings:")
+    vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=True)
 
 
   train_data = convert2ids(train_data, vocab)
@@ -399,7 +402,7 @@ class CNNClassifier(nn.Module):
 
 
 
-    def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(2, 2, 2), dropout=0.5):
+    def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(3, 4, 5), dropout=0.5):
         super(CNNClassifier,self).__init__()
 
         # kernel_sizes should now be working

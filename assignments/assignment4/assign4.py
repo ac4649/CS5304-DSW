@@ -332,7 +332,7 @@ def prepare_labels(labels):
     return labels
 
 
-def batch_iterator(dataset, batch_size, forever=False):
+def batch_iterator(dataset, batch_size, forever=False, maxEpochs=200):
   dataset_size = len(dataset)
   order = None
   nbatches = dataset_size // batch_size
@@ -348,8 +348,9 @@ def batch_iterator(dataset, batch_size, forever=False):
     return data, labels, example_ids
 
   order = init_order()
-
-  while True:
+  numEpochs = 0
+  # while True
+  while numEpochs < maxEpochs:
     for i in range(nbatches):
       start = i*batch_size
       end = (i+1)*batch_size
@@ -362,6 +363,8 @@ def batch_iterator(dataset, batch_size, forever=False):
       break
     
     order = init_order()
+
+    numEpochs += 1
 
 
 # Models
@@ -397,7 +400,7 @@ class CNNClassifier(nn.Module):
         self.fc = nn.Linear(len(kernel_sizes) * kernel_dim, output_size)
     
     
-    def init_weights(self, pretrained_word_vectors, is_static=False): # finetuned
+    def init_weights(self, pretrained_word_vectors, is_static=False): # finetuned with is_static to true
         self.embedding.weight = nn.Parameter(torch.from_numpy(pretrained_word_vectors).float())
         if is_static:
             self.embedding.weight.requires_grad = False

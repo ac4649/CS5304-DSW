@@ -491,8 +491,18 @@ def run(options):
     load_data_and_embeddings(options.data, options.ids, options.embeddings)
   model = CNNClassifier(vocab, embeddings, 5)
 
-  if torch.cuda.is_available():
-    model.cuda()
+
+  USE_CUDA = torch.cuda.is_available()
+  if USE_CUDA:
+    # gpus = [0] 
+    torch.cuda.set_device(0) # just use the first gpu available.
+
+  FloatTensor = torch.cuda.FloatTensor if USE_CUDA else torch.FloatTensor
+  LongTensor = torch.cuda.LongTensor if USE_CUDA else torch.LongTensor
+  ByteTensor = torch.cuda.ByteTensor if USE_CUDA else torch.ByteTensor
+  
+  if USE_CUDA:
+      model = model.cuda()
 
   opt = optim.SGD(model.parameters(), lr=3e-4)
   
@@ -542,8 +552,6 @@ if __name__ == '__main__':
 
   if torch.cuda.is_available():
     print("Cuda is Available, will try and use it")
-    gpus = [0]
-    torch.cuda.set_device(gpus[0])
   else:
     print("Cuda not available, not able to use")
 

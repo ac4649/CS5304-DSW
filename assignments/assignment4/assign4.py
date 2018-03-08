@@ -494,7 +494,6 @@ def run(options):
 
   USE_CUDA = torch.cuda.is_available()
   if USE_CUDA:
-    # gpus = [0] 
     torch.cuda.set_device(0) # just use the first gpu available.
 
   FloatTensor = torch.cuda.FloatTensor if USE_CUDA else torch.FloatTensor

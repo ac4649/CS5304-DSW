@@ -225,6 +225,11 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
     # if we are doing double embeding then run it on both and concatenate the results
     vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=False)
     vocab2, embeddings2 = load_embeddings(options.embeddings1, vocab, cache=False)
+
+    #Merge the vocabs and embeddings
+    #append ----300 Glove ---- ---- 300 word2vec -----
+
+
     vocab = {**vocab1,**vocab2}
     
     embeddings = {**embeddings1,**embeddings2}
@@ -284,9 +289,10 @@ def load_embeddings(path, vocab, cache=False, cache_path=None):
 
 # Batch Iterator
 
-def prepare_data(data):
+def prepare_data(data,maxKernelSize):
   # pad data
-  maxlen = max(map(len, data))
+  maxlen = max(maxKernelSize,map(len, data))
+
   data = [ex + [0] * (maxlen-len(ex)) for ex in data]
 
   # wrap in tensor
@@ -310,7 +316,7 @@ def batch_iterator(dataset, batch_size, forever=False):
 
   def get_batch(start, end):
     batch = [dataset[ii] for ii in order[start:end]]
-    data = prepare_data([ex['tokens'] for ex in batch])
+    data = prepare_data([ex['tokens'] for ex in batch],6)
     labels = prepare_labels([ex['label'] for ex in batch])
     example_ids = [ex['example_id'] for ex in batch]
     return data, labels, example_ids
@@ -355,6 +361,8 @@ class CNNClassifier(nn.Module):
     def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(2, 2, 2), dropout=0.5):
         super(CNNClassifier,self).__init__()
 
+        # kernel_sizes -> 
+
         self.embedding = nn.Embedding(len(vocab), embeddings.shape[0])
         self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[0])) for K in kernel_sizes])
 
@@ -363,7 +371,7 @@ class CNNClassifier(nn.Module):
         self.fc = nn.Linear(len(kernel_sizes) * kernel_dim, output_size)
     
     
-    def init_weights(self, pretrained_word_vectors, is_static=False):
+    def init_weights(self, pretrained_word_vectors, is_static=False): # finetuned
         self.embedding.weight = nn.Parameter(torch.from_numpy(pretrained_word_vectors).float())
         if is_static:
             self.embedding.weight.requires_grad = False

@@ -322,12 +322,18 @@ def prepare_data(data,maxKernelSize):
   data = [ex + [0] * (maxlen-len(ex)) for ex in data]
 
   # wrap in tensor
-  return torch.LongTensor(data)
+  if torch.cuda.is_available():
+    return torch.cuda.LongTensor(data)
+  else:
+    return torch.LongTensor(data)
 
 
 def prepare_labels(labels):
   try:
-    return torch.LongTensor(labels)
+    if torch.cuda.is_available():
+      return torch.cuda.LongTensor(labels)
+    else:
+      return torch.LongTensor(labels)
   except:
     return labels
 
@@ -484,6 +490,10 @@ def run(options):
   train_data, validation_data, test_data, vocab, embeddings = \
     load_data_and_embeddings(options.data, options.ids, options.embeddings)
   model = CNNClassifier(vocab, embeddings, 5)
+
+  if torch.cuda.is_available():
+    model.cuda()
+
   opt = optim.SGD(model.parameters(), lr=3e-4)
   
   step = 0
@@ -529,6 +539,13 @@ if __name__ == '__main__':
   # Set a seed for numpy, pytorch
   np.random.seed(0)
   torch.manual_seed(0)
+
+  if torch.cuda.is_available():
+    print("Cuda is Available, will try and use it")
+    gpus = [0]
+    torch.cuda.set_device(gpus[0])
+  else:
+    print("Cuda not available, not able to use")
 
 
 # Only glove

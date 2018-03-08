@@ -251,7 +251,7 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
 
     #Merge the vocabs and embeddings
     #append ----300 Glove ---- ---- 300 word2vec ----
-    concatenateVocabsEmbeddings(vocab1, embeddings1, vocab2, embeddings2):
+    vocab, embeddings = concatenateVocabsEmbeddings(vocab1, embeddings1, vocab2, embeddings2):
 
 
 

@@ -208,7 +208,7 @@ def convert2ids(data, vocab):
 
 def concatenateVocabsEmbeddings(v1, e1, v2, e2):
 
-  newEmbedings = []
+
   #compare vocabs,
   # for any word common to both,
   # 
@@ -217,17 +217,22 @@ def concatenateVocabsEmbeddings(v1, e1, v2, e2):
   # print(v1)
   # print(v2)
   commonVocab = set(v1.keys()) & set(v2.keys())
+  newEmbedings = np.ndarray(shape=(len(commonVocab),len(e1[0]) + len(e2[0])))
+  
   # print(commonVocab)
+  i = 0
   for word in commonVocab:
     id1 = v1[word]
     id2 = v2[word]
     # print(id1)
     # print(id2)
-    newEmbedings.append(np.concatenate((e1[id1], e2[id2])))
-    
+    newEmbedings[i] = np.concatenate((e1[id1], e2[id2]))
+    i = i + 1
 
+  # now make the commonVocab back into a dictionary with keys = word and value = index (starting at 0)
+  generatedVocab = dict((word,index) for word in commonVocab for index in range(len(commonVocab)))
 
-  return commonVocab, newEmbedings
+  return generatedVocab, newEmbedings
 
 
 def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
@@ -310,7 +315,9 @@ def load_embeddings(path, vocab, cache=False, cache_path=None):
 
 def prepare_data(data,maxKernelSize):
   # pad data
-  maxlen = max(maxKernelSize,map(len, data))
+  maxlen = max(map(len, data))
+  if (maxlen < maxKernelSize):
+    maxlen = maxKernelSize
 
   data = [ex + [0] * (maxlen-len(ex)) for ex in data]
 

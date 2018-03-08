@@ -243,20 +243,20 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
   test_data = read_dictionary_txt_with_phrase_ids(dictionary_path, os.path.join(phrase_ids_path, 'phrase_ids.test.txt'))
   vocab = build_vocab([train_data, validation_data, test_data])
 
-  if useEmbeddingNumber == 1:
+  if options.useEmbeddingNumber == 1:
     # use embdding for glove
     vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=False)
-  elif useEmbeddingNumber == 2:
+  elif options.useEmbeddingNumber == 2:
     # use embdding for word2vec (google)
-    vocab, embeddings = load_embeddings(options.embeddings1, vocab, cache=False)
-  elif useEmbeddingNumber == 3:
+    vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=False)
+  elif options.useEmbeddingNumber == 3:
     # if we are doing double embeding then run it on both and concatenate the results
     vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=False)
-    vocab2, embeddings2 = load_embeddings(options.embeddings1, vocab, cache=False)
+    vocab2, embeddings2 = load_embeddings(options.embeddings2, vocab, cache=False)
 
     #Merge the vocabs and embeddings
     #append ----300 Glove ---- ---- 300 word2vec ----
-    vocab, embeddings = concatenateVocabsEmbeddings(vocab1, embeddings1, vocab2, embeddings2):
+    vocab, embeddings = concatenateVocabsEmbeddings(vocab1, embeddings1, vocab2, embeddings2)
 
 
 
@@ -351,6 +351,7 @@ def batch_iterator(dataset, batch_size, forever=False, maxEpochs=200):
   numEpochs = 0
   # while True
   while numEpochs < maxEpochs:
+    print("Epoch = " + str(numEpochs))
     for i in range(nbatches):
       start = i*batch_size
       end = (i+1)*batch_size
@@ -524,15 +525,15 @@ if __name__ == '__main__':
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model2.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions2.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla.txt'), type=str)
   parser.add_argument('--log_every', default=100, type=int)
   parser.add_argument('--eval_every', default=1000, type=int)
   parser.add_argument('--batch_size', default=32, type=int)
   parser.add_argument('--eval_only_mode', action='store_true')
 
-  parser.add_argument'--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt', type = str)
-  parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
+  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
+  parser.add_argument('--useEmbeddingNumber', default=3, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 

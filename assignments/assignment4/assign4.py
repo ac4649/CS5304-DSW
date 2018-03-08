@@ -248,7 +248,7 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
     vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=False)
   elif options.useEmbeddingNumber == 2:
     # use embdding for word2vec (google)
-    vocab, embeddings = load_embeddings(options.embeddings, vocab, cache=False)
+    vocab, embeddings = load_embeddings(options.embeddings2, vocab, cache=False)
   elif options.useEmbeddingNumber == 3:
     # if we are doing double embeding then run it on both and concatenate the results
     vocab1, embeddings1 = load_embeddings(options.embeddings, vocab, cache=False)
@@ -332,7 +332,7 @@ def prepare_labels(labels):
     return labels
 
 
-def batch_iterator(dataset, batch_size, forever=False, maxEpochs=200):
+def batch_iterator(dataset, batch_size, forever=True, maxEpochs=200):
   dataset_size = len(dataset)
   order = None
   nbatches = dataset_size // batch_size
@@ -353,9 +353,13 @@ def batch_iterator(dataset, batch_size, forever=False, maxEpochs=200):
   while numEpochs < maxEpochs:
     print("Epoch = " + str(numEpochs))
     for i in range(nbatches):
+
       start = i*batch_size
       end = (i+1)*batch_size
       yield get_batch(start, end)
+
+    numEpochs += 1
+
 
     if nbatches*batch_size < dataset_size:
       yield get_batch(nbatches*batch_size, dataset_size)
@@ -364,9 +368,6 @@ def batch_iterator(dataset, batch_size, forever=False, maxEpochs=200):
       break
     
     order = init_order()
-
-    numEpochs += 1
-
 
 # Models
 
@@ -521,12 +522,69 @@ if __name__ == '__main__':
   torch.manual_seed(0)
 
 
+# Only glove
+
   parser = argparse.ArgumentParser()
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-glove.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-glove.txt'), type=str)
+  parser.add_argument('--log_every', default=100, type=int)
+  parser.add_argument('--eval_every', default=1000, type=int)
+  parser.add_argument('--batch_size', default=32, type=int)
+  parser.add_argument('--eval_only_mode', action='store_true')
+
+  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
+  parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
+  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
+
+
+
+
+  options = parser.parse_args()
+
+  print(json.dumps(options.__dict__, sort_keys=True, indent=4))
+
+  run(options)
+
+# only word2vec
+
+
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--ids', default=mydir, type=str)
+  parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
+  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-word2vec.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-word2vec.txt'), type=str)
+  parser.add_argument('--log_every', default=100, type=int)
+  parser.add_argument('--eval_every', default=1000, type=int)
+  parser.add_argument('--batch_size', default=32, type=int)
+  parser.add_argument('--eval_only_mode', action='store_true')
+
+  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
+  parser.add_argument('--useEmbeddingNumber', default=2, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
+  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
+
+
+
+
+  options = parser.parse_args()
+
+  print(json.dumps(options.__dict__, sort_keys=True, indent=4))
+
+  run(options)
+
+
+
+# both word2vec and glove
+
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--ids', default=mydir, type=str)
+  parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
+  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-both.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-both.txt'), type=str)
   parser.add_argument('--log_every', default=100, type=int)
   parser.add_argument('--eval_every', default=1000, type=int)
   parser.add_argument('--batch_size', default=32, type=int)

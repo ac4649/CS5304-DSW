@@ -208,15 +208,26 @@ def convert2ids(data, vocab):
 
 def concatenateVocabsEmbeddings(v1, e1, v2, e2):
 
+  newEmbedings = []
   #compare vocabs,
   # for any word common to both,
   # 
   # concatenate both embeddings for that word ([e1['word'] e2['word']])
   # return combined vocab and embedings
+  # print(v1)
+  # print(v2)
+  commonVocab = set(v1.keys()) & set(v2.keys())
+  # print(commonVocab)
+  for word in commonVocab:
+    id1 = v1[word]
+    id2 = v2[word]
+    # print(id1)
+    # print(id2)
+    newEmbedings.append(np.concatenate((e1[id1], e2[id2])))
+    
 
-  commonVocab = set(v1, v2)
-  print(commonVocab)
-  return
+
+  return commonVocab, newEmbedings
 
 
 def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):

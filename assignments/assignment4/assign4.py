@@ -402,7 +402,7 @@ class CNNClassifier(nn.Module):
     def __init__(self, vocab, embeddings, output_size, kernel_dim=100, kernel_sizes=(2, 2, 2), dropout=0.5):
         super(CNNClassifier,self).__init__()
 
-        # kernel_sizes -> 
+        # kernel_sizes should now be working
 
         self.embedding = nn.Embedding(len(vocab), embeddings.shape[0])
         self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[0])) for K in kernel_sizes])
@@ -458,14 +458,26 @@ def load_model(model, opt, load_path):
 def run_validation(model, dataset, options):
   err = 0
   count = 0
+
+  numPerLabels = []
+  numCorrectPredLabels = []
+
+  # making the run_validation print out the stats for each label
   for data, labels, _ in batch_iterator(dataset, options.batch_size, forever=False):
     outp = model(Variable(data))
     loss = nn.NLLLoss()(F.log_softmax(outp), Variable(labels))
     acc = (outp.data.max(1)[1] == labels).sum() / data.shape[0]
     err += (1-acc) * data.shape[0]
     count += data.shape[0]
+
+    #get the stats per label
+    print(labels.shape)
+    print(outp.data.max(1)[1].shape)
+
+
   err = err / count
   print('Ev-Err={}'.format(err))
+
   return err
 
 

@@ -406,9 +406,16 @@ class CNNClassifier(nn.Module):
         super(CNNClassifier,self).__init__()
 
         # kernel_sizes should now be working
+        print("Embedding Size: " + str(embeddings.shape[0]))
+        print("Embedding Size: " + str(embeddings.shape[1]))
 
-        self.embedding = nn.Embedding(len(vocab), embeddings.shape[0]) # may need to change to 1 for cuda
-        self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[0])) for K in kernel_sizes])
+        embeddingsPosition = 0
+        if torch.cuda.is_available():
+          embeddingsPosition = 1
+
+
+        self.embedding = nn.Embedding(len(vocab), embeddings.shape[embeddingsPosition]) # may need to change to 1 for cuda
+        self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[embeddingsPosition])) for K in kernel_sizes])
 
         # kernal_size = (K,D) 
         self.dropout = nn.Dropout(dropout)
@@ -474,8 +481,8 @@ def run_validation(model, dataset, options):
     count += data.shape[0]
 
     #get the stats per label
-    print(labels.shape)
-    print(outp.data.max(1)[1].shape)
+    # print(labels.shape)
+    # print(outp.data.max(1)[1].shape)
 
 
   err = err / count
@@ -528,7 +535,7 @@ def run(options):
     print('Model loaded from {}\nstep={} best_val_err={}'.format(options.model, step, best_val_err))
     run_test(model, test_data, options)
     sys.exit()
-  
+  print("Entering batch iterator loop")
   for data, labels, _ in batch_iterator(train_data, options.batch_size, forever=True):
     outp = model(Variable(data))
     loss = nn.NLLLoss()(F.log_softmax(outp), Variable(labels))

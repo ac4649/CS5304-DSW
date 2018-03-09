@@ -412,7 +412,7 @@ class CNNClassifier(nn.Module):
         embeddingsPosition = 1
 
 
-        self.embedding = nn.Embedding(len(vocab), embeddings.shape[embeddingsPosition]) # may need to change to 1 for cuda
+        self.embedding = nn.Embedding(len(vocab), embeddings.shape[embeddingsPosition])
         self.convs = nn.ModuleList([nn.Conv2d(1, kernel_dim, (K, embeddings.shape[embeddingsPosition])) for K in kernel_sizes])
 
         # kernal_size = (K,D) 
@@ -424,6 +424,7 @@ class CNNClassifier(nn.Module):
         self.embedding.weight = nn.Parameter(torch.from_numpy(pretrained_word_vectors).float())
         if is_static:
             self.embedding.weight.requires_grad = False
+            
 
 
     def forward(self, inputs, is_training=False):
@@ -511,6 +512,11 @@ def run(options):
     load_data_and_embeddings(options.data, options.ids, options.embeddings)
   model = CNNClassifier(vocab, embeddings, 5)
 
+  if (options.fineTuned):
+    model.init_weights(embeddings,is_static=True) # finetuned we want the weights to be fixed except for the last ones
+  else:
+    model.init_weights(embeddings,is_static=False) # not-finetuned we want everything to not be fixed
+
 
   USE_CUDA = torch.cuda.is_available()
   if USE_CUDA:
@@ -584,8 +590,8 @@ if __name__ == '__main__':
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-glove.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-glove.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-glove.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-glove.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
   parser.add_argument('--batch_size', default=64, type=int)
@@ -595,7 +601,10 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 8000, type = int)
+
+  parser.add_argument('--fineTuned', default = False, type = bool) # make this true for finetuned, false otherwise
+  # parser.add_argument('--kernel_sizes', default=(2,3,4), type = [int])
 
 
 
@@ -611,8 +620,8 @@ if __name__ == '__main__':
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-glove.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-glove.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-glove.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-glove.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
   parser.add_argument('--batch_size', default=64, type=int)
@@ -622,7 +631,8 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 8000, type = int)
+  parser.add_argument('--fineTuned', default = False, type = bool) # make this true for finetuned, false otherwise
 
 
   options = parser.parse_args()
@@ -638,8 +648,8 @@ if __name__ == '__main__':
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-word2vec.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-word2vec.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-word2vec.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-word2vec.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
   parser.add_argument('--batch_size', default=64, type=int)
@@ -650,8 +660,9 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 8000, type = int)
 
+  parser.add_argument('--fineTuned', default = False, type = bool) # make this true for finetuned, false otherwise
 
 
   options = parser.parse_args()
@@ -666,8 +677,8 @@ if __name__ == '__main__':
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-word2vec.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-word2vec.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-word2vec.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-word2vec.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
   parser.add_argument('--batch_size', default=64, type=int)
@@ -678,7 +689,8 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 8000, type = int)
+  parser.add_argument('--fineTuned', default = False, type = bool) # make this true for finetuned, false otherwise
 
 
 
@@ -695,8 +707,8 @@ if __name__ == '__main__':
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-both.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-both.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-both.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-both.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
   parser.add_argument('--batch_size', default=64, type=int)
@@ -707,8 +719,8 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
-
+  parser.add_argument('--maxNumSteps', default = 8000, type = int)
+  parser.add_argument('--fineTuned', default = False, type = bool) # make this true for finetuned, false otherwise
 
 
   options = parser.parse_args()
@@ -721,8 +733,8 @@ if __name__ == '__main__':
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
   parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnVanilla-both.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-both.txt'), type=str)
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-both.ckpt'), type=str)
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-both.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
   parser.add_argument('--batch_size', default=64, type=int)
@@ -733,7 +745,8 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 8000, type = int)
+  parser.add_argument('--fineTuned', default = False, type = bool) # make this true for finetuned, false otherwise
 
   ## now generate predictions for this classifier.
 

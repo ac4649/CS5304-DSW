@@ -597,7 +597,7 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 60000, type = int)
+  parser.add_argument('--maxNumSteps', default = 150000, type = int)
 
 
 
@@ -624,7 +624,7 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 60000, type = int)
+  parser.add_argument('--maxNumSteps', default = 150000, type = int)
 
 
   options = parser.parse_args()
@@ -644,7 +644,7 @@ if __name__ == '__main__':
   parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-word2vec.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=32, type=int)
+  parser.add_argument('--batch_size', default=64, type=int)
   parser.add_argument('--eval_only_mode', action='store_true')
 
   parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
@@ -652,7 +652,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 60000, type = int)
+  parser.add_argument('--maxNumSteps', default = 150000, type = int)
 
 
 
@@ -672,7 +672,7 @@ if __name__ == '__main__':
   parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-word2vec.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=32, type=int)
+  parser.add_argument('--batch_size', default=64, type=int)
   parser.add_argument('--eval_only_mode', action='store_false')
 
   parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
@@ -680,7 +680,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 60000, type = int)
+  parser.add_argument('--maxNumSteps', default = 150000, type = int)
 
 
 
@@ -701,7 +701,7 @@ if __name__ == '__main__':
   parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-both.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=32, type=int)
+  parser.add_argument('--batch_size', default=64, type=int)
   parser.add_argument('--eval_only_mode', action='store_true')
 
   parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
@@ -709,7 +709,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 60000, type = int)
+  parser.add_argument('--maxNumSteps', default = 150000, type = int)
 
 
 
@@ -727,7 +727,7 @@ if __name__ == '__main__':
   parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnVanilla-both.txt'), type=str)
   parser.add_argument('--log_every', default=500, type=int)
   parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=32, type=int)
+  parser.add_argument('--batch_size', default=64, type=int)
   parser.add_argument('--eval_only_mode', action='store_false')
 
   parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
@@ -735,7 +735,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 60000, type = int)
+  parser.add_argument('--maxNumSteps', default = 150000, type = int)
 
   ## now generate predictions for this classifier.
 

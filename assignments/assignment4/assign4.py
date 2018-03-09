@@ -409,9 +409,7 @@ class CNNClassifier(nn.Module):
         print("Embedding Size: " + str(embeddings.shape[0]))
         print("Embedding Size: " + str(embeddings.shape[1]))
 
-        embeddingsPosition = 0
-        if torch.cuda.is_available():
-          embeddingsPosition = 1
+        embeddingsPosition = 1
 
 
         self.embedding = nn.Embedding(len(vocab), embeddings.shape[embeddingsPosition]) # may need to change to 1 for cuda

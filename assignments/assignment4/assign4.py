@@ -513,10 +513,9 @@ def run(options):
 
 
 
-  model = CNNClassifier(vocab, embeddings, 5, dropout=0.8)
-  #test dropout = 0.6, 0.75, 0.8 perhaps?
+  model = CNNClassifier(vocab, embeddings, 5)
 
-  # 
+  # embeddings should be initialized differently for finetuning
   if (options.fineTuned):
     model.init_weights(embeddings,is_static=True)
   else:
@@ -618,7 +617,7 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 200000, type = int)
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
@@ -650,7 +649,7 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 200000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
   parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-glove-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
@@ -685,7 +684,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 200000, type = int)
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
@@ -718,7 +717,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 200000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
   parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
@@ -751,7 +750,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 200000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
   parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-both-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
@@ -780,7 +779,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 200000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
   parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-both-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)

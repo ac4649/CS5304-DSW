@@ -513,7 +513,8 @@ def run(options):
 
 
 
-  model = CNNClassifier(vocab, embeddings, 5, kernel_sizes=(2,2,2))
+  model = CNNClassifier(vocab, embeddings, 5, dropout=0.6)
+  #test dropout = 0.6, 0.75, 0.8 perhaps?
 
   # 
   if (options.fineTuned):

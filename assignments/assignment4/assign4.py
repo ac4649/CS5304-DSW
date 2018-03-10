@@ -513,7 +513,7 @@ def run(options):
 
 
 
-  model = CNNClassifier(vocab, embeddings, 5, dropout=0.75)
+  model = CNNClassifier(vocab, embeddings, 5, dropout=0.8)
   #test dropout = 0.6, 0.75, 0.8 perhaps?
 
   # 

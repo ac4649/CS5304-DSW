@@ -503,7 +503,7 @@ def run(options):
 
 
 
-  model = CNNClassifier(vocab, embeddings, 5)
+  model = CNNClassifier(vocab, embeddings, 5, kernel_sizes=(2, 3, 4))
 
   # 
   if (options.fineTuned):
@@ -601,7 +601,7 @@ if __name__ == '__main__':
   parser.add_argument('--maxNumSteps', default = 150000, type = int)
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
-  # parser.add_argument('--kernel_sizes', default=(2,3,4), type = [int])
+
 
 
 

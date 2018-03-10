@@ -210,12 +210,6 @@ def concatenateVocabsEmbeddings(v1, e1, v2, e2):
 
 
   #compare vocabs,
-  # for any word common to both,
-  # 
-  # concatenate both embeddings for that word ([e1['word'] e2['word']])
-  # return combined vocab and embedings
-  # print(v1)
-  # print(v2)
   commonVocab = set(v1.keys()) & set(v2.keys())
   newEmbedings = np.ndarray(shape=(len(commonVocab),len(e1[0]) + len(e2[0])))
   
@@ -479,10 +473,6 @@ def run_validation(model, dataset, options):
     err += (1-acc) * data.shape[0]
     count += data.shape[0]
 
-    #get the stats per label
-    # print(labels.shape)
-    # print(outp.data.max(1)[1].shape)
-
 
   err = err / count
   print('Ev-Err={}'.format(err))
@@ -512,13 +502,14 @@ def run(options):
     load_data_and_embeddings(options.data, options.ids, options.embeddings)
 
 
-  if (options.fineTuned):
-    model = CNNClassifier(vocab, embeddings, 5,kernel_sizes=(2,2,2)) # change these to be run when finetuned
-  else:
-    model = CNNClassifier(vocab, embeddings, 5)
+
+  model = CNNClassifier(vocab, embeddings, 5)
 
   # 
-  model.init_weights(embeddings,is_static=False)
+  if (options.fineTuned):
+    model.init_weights(embeddings,is_static=True)
+  else:
+    model.init_weights(embeddings,is_static=False)
 
 
   USE_CUDA = torch.cuda.is_available()
@@ -532,7 +523,10 @@ def run(options):
   if USE_CUDA:
       model = model.cuda()
 
-  opt = optim.SGD(model.parameters(), lr=3e-4)
+  if (options.fineTuned):
+    opt = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()), lr = 3e-4)
+  else:
+    opt = optim.SGD(model.parameters(), lr=3e-4)
   
   step = 0
   best_val_err = 1
@@ -604,7 +598,7 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 40000, type = int)
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
   # parser.add_argument('--kernel_sizes', default=(2,3,4), type = [int])
@@ -634,12 +628,13 @@ if __name__ == '__main__':
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 40000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
 
   options = parser.parse_args()
   run(options)
+
 # only word2vec
 
   # Set a seed for numpy, pytorch
@@ -663,7 +658,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 40000, type = int)
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
@@ -692,7 +687,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 40000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
 
@@ -722,7 +717,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 40000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
 
@@ -748,7 +743,7 @@ if __name__ == '__main__':
   parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
 
-  parser.add_argument('--maxNumSteps', default = 150000, type = int)
+  parser.add_argument('--maxNumSteps', default = 40000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
   ## now generate predictions for this classifier.

@@ -465,6 +465,8 @@ def run_validation(model, dataset, options):
   numPerLabels = []
   numCorrectPredLabels = []
 
+  validationFile = open(options.validationFileName,'w')
+
   # making the run_validation print out the stats for each label
   for data, labels, _ in batch_iterator(dataset, options.batch_size, forever=False):
     outp = model(Variable(data))
@@ -474,6 +476,12 @@ def run_validation(model, dataset, options):
     count += data.shape[0]
 
 
+    for i in range(len(outp.data.max(1)[1])):
+      validationFile.write('{},{}\n'.format(labels[i],outp.data.max(1)[1][i]))
+
+    
+
+  validationFile.close()
   err = err / count
   print('Ev-Err={}'.format(err))
 
@@ -498,6 +506,8 @@ def run_test(model, dataset, options):
 
 
 def run(options):
+
+
   train_data, validation_data, test_data, vocab, embeddings = \
     load_data_and_embeddings(options.data, options.ids, options.embeddings)
 
@@ -549,17 +559,24 @@ def run(options):
     loss.backward()
     opt.step()
     
+    logFile = open(options.stepLogFileName,'a')
+    validationLog = open(options.validationLogFileName,'a')
+
     if step % options.log_every == 0:
       print('Step={} Tr-Loss={} Tr-Acc={}'.format(step, loss.data[0], acc))
+      logFile.write('{},{},{}\n'.format(step, loss.data[0], acc))
       
     if step % options.eval_every == 0:
       val_err = run_validation(model, validation_data, options)
-      
+      validationLog.write('{},{}\n'.format(step, val_err))
       # early stopping
       if val_err < best_val_err:
         best_val_err = val_err
         print('Checkpointing model step={} best_val_err={}.'.format(step, best_val_err))
         checkpoint_model(step, val_err, model, opt, options.model)
+
+      logFile.close()
+      validationLog.close()
 
     if step == options.maxNumSteps:
       print('Completed Training with step={} best_val_err={}.'.format(step, best_val_err))
@@ -567,6 +584,8 @@ def run(options):
       break
     
     step += 1
+
+
 
 
 if __name__ == '__main__':
@@ -602,7 +621,9 @@ if __name__ == '__main__':
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
-
+  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-glove-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
+  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-glove-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
+  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-glove-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
 
 
   options = parser.parse_args()
@@ -630,6 +651,11 @@ if __name__ == '__main__':
 
   parser.add_argument('--maxNumSteps', default = 150000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
+
+  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-glove-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
+  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-glove-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
+  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-glove-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
+
 
 
   options = parser.parse_args()
@@ -662,6 +688,10 @@ if __name__ == '__main__':
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
+  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
+  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
+  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
+
 
   options = parser.parse_args()
 
@@ -690,6 +720,9 @@ if __name__ == '__main__':
   parser.add_argument('--maxNumSteps', default = 150000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
+  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
+  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
+  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
 
 
   options = parser.parse_args()
@@ -720,6 +753,9 @@ if __name__ == '__main__':
   parser.add_argument('--maxNumSteps', default = 150000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
+  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-both-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
+  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-both-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
+  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-both-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
 
   options = parser.parse_args()
 
@@ -745,6 +781,10 @@ if __name__ == '__main__':
 
   parser.add_argument('--maxNumSteps', default = 150000, type = int)
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
+
+  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-both-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
+  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-both-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
+  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-both-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
 
   ## now generate predictions for this classifier.
 

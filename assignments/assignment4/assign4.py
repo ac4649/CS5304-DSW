@@ -345,7 +345,7 @@ def batch_iterator(dataset, batch_size, forever=True, maxEpochs=200):
 
   def get_batch(start, end):
     batch = [dataset[ii] for ii in order[start:end]]
-    data = prepare_data([ex['tokens'] for ex in batch],6)
+    data = prepare_data([ex['tokens'] for ex in batch],7) # the number should be changed to the maximum kernel size +1
     labels = prepare_labels([ex['label'] for ex in batch])
     example_ids = [ex['example_id'] for ex in batch]
     return data, labels, example_ids
@@ -503,7 +503,7 @@ def run(options):
 
 
 
-  model = CNNClassifier(vocab, embeddings, 5, kernel_sizes=(2, 3, 4))
+  model = CNNClassifier(vocab, embeddings, 5, kernel_sizes=(4, 5, 6))
 
   # 
   if (options.fineTuned):

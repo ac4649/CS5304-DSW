@@ -503,7 +503,7 @@ def run(options):
 
 
 
-  model = CNNClassifier(vocab, embeddings, 5, kernel_sizes=(4, 5, 6))
+  model = CNNClassifier(vocab, embeddings, 5, kernel_sizes=(2,2,2))
 
   # 
   if (options.fineTuned):

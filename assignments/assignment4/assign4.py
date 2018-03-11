@@ -77,52 +77,10 @@ def sentiment2label(x):
     raise ValueError('Improper sentiment value {}'.format(x))
 
 
-def lemmatizeWord(word,lemmatizer,position='n'):
-    #this function lemmatizes the word given
-    
-    newWord = lemmatizer.lemmatize(word,pos=position)
-    
-    if position == 'n':
-        nextPosition = 'v'
-    elif position == 'v':
-        nextPosition = 'a'
-    elif position == 'a':
-        nextPosition = 'r'
-    else:
-        return newWord
-    
-    if newWord == word:
-        #nothing changed, try something else
-        newWord = lemmatizeWord(word,lemmatizer,nextPosition)
-        
-    
-    return newWord
-
-def removeStopWords(wordVector):
-    noStop = list(filter(lambda x: x not in nltk.corpus.stopwords.words('english'), wordVector))
-#     print(noStop)
-    return noStop
-
-# This function will do all of the stemming, lemmatization,
-# removal of stop words and other things required for the generation of vocab
+# This function was placed here if we want to do anything to the tokens before sending them out.
 def tokenizePhrase(phrase):
 
-    # need to make sure that the output tokens 
-    # is as large as the embeddings so that we don't have kernel errors
-
-    lemmatizer = nltk.stem.wordnet.WordNetLemmatizer()
-    
-#     print(phrase)
-    stop_words = set(stopwords.words('english'))
     phraseWords = phrase.split(' ')
-
-    # returnTokens = [] 
-    # for word in phraseWords:
-    #     newWord = lemmatizeWord(word,lemmatizer)
-    #     returnTokens.append(newWord)
-        
-    # # print(returnTokens)
-    # returnTokens = removeStopWords(returnTokens)
         
     return phraseWords
 
@@ -213,13 +171,13 @@ def concatenateVocabsEmbeddings(v1, e1, v2, e2):
   commonVocab = set(v1.keys()) & set(v2.keys())
   newEmbedings = np.ndarray(shape=(len(commonVocab),len(e1[0]) + len(e2[0])))
   
-  # print(commonVocab)
+  # for every common word, find its location in each of the vocab dictionaries.
+  # then get that words embedding in each of the embeddings and concatenate them.
   i = 0
   for word in commonVocab:
     id1 = v1[word]
     id2 = v2[word]
-    # print(id1)
-    # print(id2)
+
     newEmbedings[i] = np.concatenate((e1[id1], e2[id2]))
     i = i + 1
 
@@ -249,7 +207,6 @@ def load_data_and_embeddings(data_path, phrase_ids_path, embeddings_path):
     vocab2, embeddings2 = load_embeddings(options.embeddings2, vocab, cache=True)
 
     #Merge the vocabs and embeddings
-    #append ----300 Glove ---- ---- 300 word2vec ----
     vocab, embeddings = concatenateVocabsEmbeddings(vocab1, embeddings1, vocab2, embeddings2)
 
   else:
@@ -351,22 +308,15 @@ def batch_iterator(dataset, batch_size, forever=True, maxEpochs=200):
     return data, labels, example_ids
 
   order = init_order()
-  numEpochs = 0
 
-  # print("# Batches = " + str(nbatches))
-  # print("Batch Size = " + str(batch_size))
 
   while True:
-  # while numEpochs < maxEpochs:
-    # print("Epoch = " + str(numEpochs))
+
     for i in range(nbatches):
 
       start = i*batch_size
       end = (i+1)*batch_size
       yield get_batch(start, end)
-
-    # numEpochs += 1
-
 
     if nbatches*batch_size < dataset_size:
       yield get_batch(nbatches*batch_size, dataset_size)
@@ -400,8 +350,8 @@ class CNNClassifier(nn.Module):
         super(CNNClassifier,self).__init__()
 
         # kernel_sizes should now be working
-        print("Embedding Size: " + str(embeddings.shape[0]))
-        print("Embedding Size: " + str(embeddings.shape[1]))
+        # print("Embedding Size: " + str(embeddings.shape[0]))
+        # print("Embedding Size: " + str(embeddings.shape[1]))
 
         embeddingsPosition = 1
 
@@ -546,10 +496,12 @@ def run(options):
     print('Model loaded from {}\nstep={} best_val_err={}'.format(options.model, step, best_val_err))
     run_test(model, test_data, options)
     # sys.exit()
-    # maybe not exit, instead just return out of the run function
+    # maybe not exit, instead just return out of the run function,
+    # this allows multiple tests in series without having to re-run the script.
+    #  Especially useful for running long runs throughout the day when I was on campus.
     return
 
-  print("Entering batch iterator loop")
+  # print("Entering batch iterator loop")
   for data, labels, _ in batch_iterator(train_data, options.batch_size, forever=True):
     outp = model(Variable(data))
     loss = nn.NLLLoss()(F.log_softmax(outp), Variable(labels))
@@ -580,7 +532,6 @@ def run(options):
 
     if step == options.maxNumSteps:
       print('Completed Training with step={} best_val_err={}.'.format(step, best_val_err))
-      # checkpoint_model(step, val_err, model, opt, options.model)
       break
     
     step += 1
@@ -605,19 +556,18 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--ids', default=mydir, type=str)
   parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
-  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-glove.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-glove.txt'), type=str)
-  parser.add_argument('--log_every', default=500, type=int)
-  parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=64, type=int)
-  parser.add_argument('--eval_only_mode', action='store_true')
+  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str) # this is the first embedding, please don't change this.
+  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-glove.ckpt'), type=str) # this should be the filename the model is saved to
+  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-glove.txt'), type=str) # this is the file name to which predictions will be saved. 
+  parser.add_argument('--log_every', default=500, type=int) # this will log the training accuracy every # steps
+  parser.add_argument('--eval_every', default=4000, type=int) # this will evaluate and provide validation error every # steps
+  parser.add_argument('--batch_size', default=64, type=int) # this is the size of a batch sent to the gpu for computation
+  parser.add_argument('--eval_only_mode', action='store_true') # this should be set to store_true while training and store_false while testing
 
-  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
+  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str) # storing the second embedding allows for combination to happen, please don't change this 
   parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
-  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
 
-  parser.add_argument('--maxNumSteps', default = 800000, type = int)
+  parser.add_argument('--maxNumSteps', default = 800000, type = int) # this is the number of steps the model will be trained for.
 
   parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
 
@@ -629,165 +579,5 @@ if __name__ == '__main__':
   options = parser.parse_args()
 
   print(json.dumps(options.__dict__, sort_keys=True, indent=4))
-
-  run(options)
-
-  ## now generate predictions for this classifier.
-
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--ids', default=mydir, type=str)
-  parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
-  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-glove.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-glove.txt'), type=str)
-  parser.add_argument('--log_every', default=500, type=int)
-  parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=64, type=int)
-  parser.add_argument('--eval_only_mode', action='store_false')
-
-  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
-  parser.add_argument('--useEmbeddingNumber', default=1, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
-  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
-
-  parser.add_argument('--maxNumSteps', default = 800000, type = int)
-  parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
-
-  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-glove-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
-  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-glove-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
-  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-glove-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
-
-
-
-  options = parser.parse_args()
-  run(options)
-
-# only word2vec
-
-  # Set a seed for numpy, pytorch
-  np.random.seed(0)
-  torch.manual_seed(0)
-
-
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--ids', default=mydir, type=str)
-  parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
-  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-word2vec.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-word2vec.txt'), type=str)
-  parser.add_argument('--log_every', default=500, type=int)
-  parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=64, type=int)
-  parser.add_argument('--eval_only_mode', action='store_true')
-
-  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
-  parser.add_argument('--useEmbeddingNumber', default=2, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
-  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
-
-
-  parser.add_argument('--maxNumSteps', default = 800000, type = int)
-
-  parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
-
-  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
-  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
-  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
-
-
-  options = parser.parse_args()
-
-  print(json.dumps(options.__dict__, sort_keys=True, indent=4))
-
-  run(options)
-
-  ## now generate predictions for this classifier.
-
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--ids', default=mydir, type=str)
-  parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
-  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-word2vec.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-word2vec.txt'), type=str)
-  parser.add_argument('--log_every', default=500, type=int)
-  parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=64, type=int)
-  parser.add_argument('--eval_only_mode', action='store_false')
-
-  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
-  parser.add_argument('--useEmbeddingNumber', default=2, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
-  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
-
-
-  parser.add_argument('--maxNumSteps', default = 800000, type = int)
-  parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
-
-  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
-  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
-  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-word2vec-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
-
-
-  options = parser.parse_args()
-  run(options)
-
-# both word2vec and glove
-
-  # Set a seed for numpy, pytorch
-  np.random.seed(0)
-  torch.manual_seed(0)
-
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--ids', default=mydir, type=str)
-  parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
-  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-both.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-both.txt'), type=str)
-  parser.add_argument('--log_every', default=500, type=int)
-  parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=64, type=int)
-  parser.add_argument('--eval_only_mode', action='store_true')
-
-  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
-  parser.add_argument('--useEmbeddingNumber', default=3, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
-  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
-
-
-  parser.add_argument('--maxNumSteps', default = 800000, type = int)
-  parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
-
-  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-both-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
-  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-both-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
-  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-both-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
-
-  options = parser.parse_args()
-
-  print(json.dumps(options.__dict__, sort_keys=True, indent=4))
-
-  run(options)
-
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--ids', default=mydir, type=str)
-  parser.add_argument('--data', default=os.path.expanduser('data/stanfordSentimentTreebank'), type=str)
-  parser.add_argument('--embeddings', default=os.path.expanduser('data/glove/glove.840B.300d.txt'), type=str)
-  parser.add_argument('--model', default=os.path.join(mydir, 'model-cnnTweaked-both.ckpt'), type=str)
-  parser.add_argument('--predictions', default=os.path.join(mydir, 'predictions-cnnTweaked-both.txt'), type=str)
-  parser.add_argument('--log_every', default=500, type=int)
-  parser.add_argument('--eval_every', default=4000, type=int)
-  parser.add_argument('--batch_size', default=64, type=int)
-  parser.add_argument('--eval_only_mode', action='store_false')
-
-  parser.add_argument('--embeddings2', default=os.path.expanduser('data/GoogleNews-vectors-negative300.txt'), type = str)
-  parser.add_argument('--useEmbeddingNumber', default=3, type = int) # this takes value 1, 2 or 3 (1 = glove, 2 = word2vec, 3 = both)
-  parser.add_argument('--usePreProcess', default=False, type=bool) # this determines if we use preprocessing / finetuning on the model
-
-
-  parser.add_argument('--maxNumSteps', default = 800000, type = int)
-  parser.add_argument('--fineTuned', default = True, type = bool) # make this true for finetuned, false otherwise
-
-  parser.add_argument('--validationFileName', default=os.path.expanduser('model-cnnTweaked-both-validationTruths.txt'), type = str) # this is the filename required for writing the validation predictions and truth values to a test file for comparison (and analysis)
-  parser.add_argument('--stepLogFileName', default=os.path.expanduser('model-cnnTweaked-both-log.txt'), type = str) # this is the filename where the step number, accuracy and errpr of training will be logged.
-  parser.add_argument('--validationLogFileName', default=os.path.expanduser('model-cnnTweaked-both-val-log.txt'), type = str) # this is the filename where the step number, accuracy and error of validation will be logged.
-
-  ## now generate predictions for this classifier.
-
-  options = parser.parse_args()
 
   run(options)

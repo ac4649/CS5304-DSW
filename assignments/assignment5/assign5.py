@@ -115,17 +115,24 @@ for i in range(EPOCH):
     print(i)
     run_epoch()
 
+# print(model.)
+
 
 print("Running Test")
 
 # predict on a single value
-predictionsList = [] # this array will be the values of the current run
+# predictionsList = [] # this array will be the values of the current run
 
 # for i,batch in enumerate(get_batch(BATCH_SIZE,test_ratings)):
 rows = Variable(torch.LongTensor(test_ratings[28665].toarray()[0]))
 cols = Variable(torch.LongTensor(test_ratings[:,0].T.toarray()[0]))
 predictions = model(rows, cols)
-predictionsList.append(predictions.data.cpu().numpy())
 
-print(predictionsList)
+print(predictions))
+
+# predictionsList.append(predictions.data.cpu().numpy())
+
+predictionsDF = pd.DataFrame(predictions)
+print(predictionsDF.head())
+predictionsDF.to_csv('testing.csv')
 

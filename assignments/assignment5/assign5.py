@@ -79,6 +79,7 @@ class MatrixFactorization(torch.nn.Module):
 
 print("Starting")
 names = ['user_id', 'item_id', 'rating', 'timestamp']
+print("Loading Data")
 df_train = pd.read_csv('ml-10M100K/r3.train', sep='::', names=names,engine='python')
 print("Loaded train data")
 df_test = pd.read_csv('ml-10M100K/r3.test', sep='::', names=names,engine='python')
@@ -128,7 +129,7 @@ rows = Variable(torch.LongTensor(test_ratings[28665].toarray()[0]))
 cols = Variable(torch.LongTensor(test_ratings[:,0].T.toarray()[0]))
 predictions = model(rows, cols)
 
-print(predictions))
+print(predictions)
 
 # predictionsList.append(predictions.data.cpu().numpy())
 

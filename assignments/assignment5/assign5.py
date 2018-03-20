@@ -40,7 +40,7 @@ class MatrixFactorization(torch.nn.Module):
         # Mu is 1x1, user_bias is 1xn_users. item_bias is 1xn_items
         
     def getLoss(self):
-        return self.currentLoss
+        return self.currentLoss.data.cpu().numpy()
 
 
     currentLoss = 10
@@ -194,16 +194,25 @@ def get_movielens_ratings(df):
 
 #Task 1:
 
-loadPreVresults = True
+loadPrevResults = False
+loadSavedMeans = False
 
-if loadPreVresults:
-    resultsFrame = pd.read_csv('results.csv',index_col=0)
-    print(resultsFrame)
+if loadPrevResults:
+    LambdaMeanLossResultsFrame = pd.read_csv('LambdaMeanLossResults.csv',index_col=0)
+
+    print(LambdaMeanLossResultsFrame)
 else:
-    resultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
-    print(resultsFrame)
+    LambdaMeanLossResultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
+    print(LambdaMeanLossResultsFrame)
 
-for fileName in ["r4","r5"]:
+if loadSavedMeans:
+    SavedMeansResultsFrame = pd.read_csv('LambdaMeanLossResults.csv',index_col=0)
+
+
+FileNames = ["r1","r2","r3","r4","r5"]
+
+print("Running Exmperiment on file ids {}".format(FileNames))
+for fileName in FileNames:
 
     print("Starting Building model for cross validation {}".format(fileName))
     names = ['user_id', 'item_id', 'rating', 'timestamp']
@@ -228,11 +237,11 @@ for fileName in ["r4","r5"]:
         model.cuda()
 
     print("Running the training")
-    EPOCH = 1
+    EPOCH = 1 # Number of Epochs to train for
     BATCH_SIZE = 1000 #50
-    LR = 0.001
-
-    for LR in [0.001, 0.01, 0.1]:
+    LRs = [0.001, 0.01, 0.1] # array of learning rates to test
+    print("Learining Rates tested: {}".format(LRs))
+    for LR in LRs:
         print("Training Model")
         print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
         model.train(EPOCH,BATCH_SIZE,ratings,LR)
@@ -244,10 +253,13 @@ for fileName in ["r4","r5"]:
         print(len(predictions))
         print(np.mean(losses))
 
-        resultsFrame.loc[fileName][str(LR)] = np.mean(losses)
-        resultsFrame.to_csv('results.csv')
+        LambdaMeanLossResultsFrame.loc[fileName][str(LR)] = np.mean(losses)
+        LambdaMeanLossResultsFrame.to_csv('LambdaMeanLossResults.csv')
+        print(LambdaMeanLossResultsFrame)
 
-    resultsFrame.to_csv('results.csv')
+    LambdaMeanLossResultsFrame.to_csv('LambdaMeanLossResults.csv')
 
-resultsFrame.to_csv('results.csv')
+LambdaMeanLossResultsFrame.to_csv('LambdaMeanLossResults.csv')
+
+print(LambdaMeanLossResultsFrame)
 

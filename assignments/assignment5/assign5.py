@@ -193,8 +193,8 @@ def getUserItemNumbers(trainDF,testDF):
 def get_movielens_ratings(df):
     n_users = max(df.user_id.unique())
     n_items = max(df.item_id.unique())
-    print(n_users)
-    print(n_items)
+    # print(n_users)
+    # print(n_items)
     interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
     for row in df.itertuples():
         interactions[row[1] - 1, row[2] - 1] = row[3]
@@ -202,11 +202,11 @@ def get_movielens_ratings(df):
 
 def get_movielens_ratings_testing(df,n_users,n_items): # we want to make sure users match 
 
-    print(max(df.user_id.unique()))
-    print(max(df.item_id.unique()))
-    print(n_users)
-    print(n_items)
-    n_items = max(df.item_id.unique())
+    # print(max(df.user_id.unique()))
+    # print(max(df.item_id.unique()))
+    # print(n_users)
+    # print(n_items)
+    # n_items = max(df.item_id.unique())
     interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
     for row in df.itertuples():
         interactions[row[1] - 1, row[2] - 1] = row[3]

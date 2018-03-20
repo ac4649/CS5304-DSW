@@ -59,7 +59,7 @@ class MatrixFactorization(torch.nn.Module):
         print(torch.transpose(self.item_factors(item),0,1))
 
 #         return torch.mm(self.user_factors(user)[0],torch.transpose(self.item_factors(item),0,1)[0])
-        return (self.user_factors(user) * self.item_factors(item)).sum(1)
+        return torch.mm(self.user_factors(user),torch.transpose(self.item_factors(item),0,1))
     
     
 #         return torch.dot(self.user_factors(user),self.item_factors(item))
@@ -90,25 +90,31 @@ class MatrixFactorization(torch.nn.Module):
             yield batch 
     
     def run_test(self,batch_size,ratings_test):
+
         predictionsArray = []
         losses = []
         print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
         for i,batch in enumerate(model.get_batch(batch_size,ratings_test)):
             print(i)
             if self.useCUDA:
-                interactions = Variable(torch.cuda.FloatTensor(ratings_test[batch, :].toarray()))
-                rows = Variable(torch.cuda.LongTensor(batch))
-                cols = Variable(torch.cuda.LongTensor(np.arange(ratings_test.shape[1])))               
+                interactions = Variable(torch.cuda.FloatTensor(ratings_test[batch, :].toarray()),volatile = True)
+                rows = Variable(torch.cuda.LongTensor(batch), volatile = True)
+                cols = Variable(torch.cuda.LongTensor(np.arange(ratings_test.shape[1])), volatile = True)               
             else:
                 interactions = Variable(torch.FloatTensor(ratings_test[batch, :].toarray()))
                 rows = Variable(torch.LongTensor(batch))
                 cols = Variable(torch.LongTensor(np.arange(ratings_test.shape[1])))
 
             # Predict and calculate loss
-            predictions = model(rows, cols)
-#             print(type(predictions))
+            predictions = self(rows, cols)
+            # predictions = self.predict(rows,cols)
+#              print(type(predictions))
             predictionsArray.append(predictions.data.cpu().numpy())
             losses.append(self.loss_func(predictions, interactions))
+
+            # del interactions
+            # del rows
+            # del cols
         return predictionsArray, losses
     
     def run_epoch(self,batch_size, ratings):
@@ -213,6 +219,7 @@ BATCH_SIZE = 1000 #50
 LR = 0.001
 
 print("Training Model")
+print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
 model.train(EPOCH,BATCH_SIZE,ratings,LR)
 
 print("Model Loss: {}".format(model.getLoss()))
@@ -220,7 +227,7 @@ print("Model Loss: {}".format(model.getLoss()))
 
 print("Running Test")
 
-predictions, losses = model.run_test(1,test_ratings)
+predictions, losses = model.run_test(1000,test_ratings)
 
 print(len(predictions))
 print(np.mean(losses))

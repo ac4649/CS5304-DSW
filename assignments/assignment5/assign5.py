@@ -194,9 +194,16 @@ def get_movielens_ratings(df):
 
 #Task 1:
 
-resultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
+loadPreVresults = True
 
-for fileName in ["r1","r2","r3","r4","r5"]:
+if loadPreVresults:
+    resultsFrame = pd.read_csv('results.csv',index_col=0)
+    print(resultsFrame)
+else:
+    resultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
+    print(resultsFrame)
+
+for fileName in ["r4","r5"]:
 
     print("Starting Building model for cross validation {}".format(fileName))
     names = ['user_id', 'item_id', 'rating', 'timestamp']

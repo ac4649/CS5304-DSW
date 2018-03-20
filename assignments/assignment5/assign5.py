@@ -96,6 +96,7 @@ class MatrixFactorization(torch.nn.Module):
         print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
         for i,batch in tqdm(enumerate(model.get_batch(batch_size,ratings_test))):
             # print(i)
+            print(batch)
             if self.useCUDA:
                 interactions = Variable(torch.cuda.FloatTensor(ratings_test[batch, :].toarray()),volatile = True)
                 rows = Variable(torch.cuda.LongTensor(batch), volatile = True)
@@ -178,30 +179,53 @@ class MatrixFactorization(torch.nn.Module):
                 return Variable(torch.LongTensor(lillMatrix.toarray()))
 
 
+# This function gets the size of users 
+def getUserItemNumbers(trainDF,testDF):
+    n_userTrain = max(trainDF.user_id.unique())
+    n_itemsTrain = max(trainDF.item_id.unique())
+    
+    n_userTest = max(testDF.user_id.unique())
+    n_itemsTest = max(testDF.item_id.unique())
 
+    return max(n_userTrain,n_userTest), max(n_itemsTrain,n_itemsTest)
 
 
 def get_movielens_ratings(df):
     n_users = max(df.user_id.unique())
     n_items = max(df.item_id.unique())
-
+    print(n_users)
+    print(n_items)
     interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
     for row in df.itertuples():
         interactions[row[1] - 1, row[2] - 1] = row[3]
     return interactions
 
+def get_movielens_ratings_testing(df,n_users,n_items): # we want to make sure users match 
+
+    print(max(df.user_id.unique()))
+    print(max(df.item_id.unique()))
+    print(n_users)
+    print(n_items)
+    n_items = max(df.item_id.unique())
+    interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
+    for row in df.itertuples():
+        interactions[row[1] - 1, row[2] - 1] = row[3]
+    return interactions
+
+    
+
 
 
 #Task 1:
 
-loadPrevResults = False
+loadPrevResults = True
 loadSavedMeans = False
 
 EPOCH = 1 # Number of Epochs to train for
 BATCH_SIZE = 1000 #50
 LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 
-FileNames = ["r4"]
+FileNames = ["r5"]
 if loadPrevResults:
     LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)
 
@@ -226,7 +250,10 @@ for fileName in FileNames:
     ratings = get_movielens_ratings(df_train)
     print(ratings.shape)
 
-    test_ratings = get_movielens_ratings(df_test)
+
+    numUsers, numItems = getUserItemNumbers(df_train,df_test)
+
+    test_ratings = get_movielens_ratings_testing(df_test,numUsers,numItems)
     print(test_ratings.shape)
 
     print("Prepared the data")

@@ -43,7 +43,7 @@ class MatrixFactorization(torch.nn.Module):
         return self.currentLoss
 
 
-    currentLoss = 2
+    currentLoss = 10
     useCUDA = False
     
     interactions = False
@@ -95,7 +95,7 @@ class MatrixFactorization(torch.nn.Module):
         losses = []
         print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
         for i,batch in enumerate(model.get_batch(batch_size,ratings_test)):
-            print(i)
+            # print(i)
             if self.useCUDA:
                 interactions = Variable(torch.cuda.FloatTensor(ratings_test[batch, :].toarray()),volatile = True)
                 rows = Variable(torch.cuda.LongTensor(batch), volatile = True)
@@ -110,7 +110,8 @@ class MatrixFactorization(torch.nn.Module):
             # predictions = self.predict(rows,cols)
 #              print(type(predictions))
             predictionsArray.append(predictions.data.cpu().numpy())
-            losses.append(self.loss_func(predictions, interactions))
+            # print(type(self.loss_func(predictions, interactions)))
+            losses.append(self.loss_func(predictions, interactions).data.cpu().numpy())
 
             # del interactions
             # del rows
@@ -189,46 +190,57 @@ def get_movielens_ratings(df):
         interactions[row[1] - 1, row[2] - 1] = row[3]
     return interactions
 
-print("Starting")
-names = ['user_id', 'item_id', 'rating', 'timestamp']
-print("Loading Data")
-df_train = pd.read_csv('ml-10M100K/r3.train', sep='::', names=names,engine='python')
-print("Loaded train data")
-df_test = pd.read_csv('ml-10M100K/r3.test', sep='::', names=names,engine='python')
-print("Loaded Data")
-
-ratings = get_movielens_ratings(df_train)
-print(ratings.shape)
-
-test_ratings = get_movielens_ratings(df_test)
-print(test_ratings.shape)
-
-print("Prepared the data")
 
 
-print("Creating Model")
-model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2,useBias = False)
-if torch.cuda.is_available():
-    model.cuda()
+#Task 1:
+
+resultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
+
+for fileName in ["r1","r2","r3","r4","r5"]:
+
+    print("Starting Building model for cross validation {}".format(fileName))
+    names = ['user_id', 'item_id', 'rating', 'timestamp']
+    print("Loading Data")
+    df_train = pd.read_csv('ml-10M100K/'+fileName+'.train', sep='::', names=names,engine='python')
+    print("Loaded train data")
+    df_test = pd.read_csv('ml-10M100K/'+fileName+'.test', sep='::', names=names,engine='python')
+    print("Loaded Data")
+
+    ratings = get_movielens_ratings(df_train)
+    print(ratings.shape)
+
+    test_ratings = get_movielens_ratings(df_test)
+    print(test_ratings.shape)
+
+    print("Prepared the data")
 
 
+    print("Creating Model")
+    model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2,useBias = False)
+    if torch.cuda.is_available():
+        model.cuda()
 
-print("Running the training")
-EPOCH = 1
-BATCH_SIZE = 1000 #50
-LR = 0.001
+    print("Running the training")
+    EPOCH = 1
+    BATCH_SIZE = 1000 #50
+    LR = 0.001
 
-print("Training Model")
-print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
-model.train(EPOCH,BATCH_SIZE,ratings,LR)
+    for LR in [0.001, 0.01, 0.1]:
+        print("Training Model")
+        print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
+        model.train(EPOCH,BATCH_SIZE,ratings,LR)
 
-print("Model Loss: {}".format(model.getLoss()))
+        print("Model Loss: {}".format(model.getLoss()))
+        print("Running Test")
+        predictions, losses = model.run_test(1000,test_ratings)
 
+        print(len(predictions))
+        print(np.mean(losses))
 
-print("Running Test")
+        resultsFrame.loc[fileName][str(LR)] = np.mean(losses)
+        resultsFrame.to_csv('results.csv')
 
-predictions, losses = model.run_test(1000,test_ratings)
+    resultsFrame.to_csv('results.csv')
 
-print(len(predictions))
-print(np.mean(losses))
+resultsFrame.to_csv('results.csv')
 

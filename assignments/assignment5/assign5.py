@@ -5,6 +5,175 @@ import torch
 from torch.autograd import Variable
 import pandas as pd
 
+from tqdm import * # remove before submission
+
+
+class MatrixFactorization(torch.nn.Module):
+
+
+    def __init__(self, n_users, n_items, n_factors=5, useBias = False):
+        super().__init__()
+        
+        if torch.cuda.is_available(): # CHECK FOR CUDA AVAILABILITY
+            self.useCUDA = True
+            print("CUDA is being used")
+        else:
+            print("CUDA not available, reverting to CPU")
+            
+        if self.useCUDA: # IF IT IS AVAILABLE, USE IT
+            self.cuda() 
+        
+        self.user_factors = torch.nn.Embedding(n_users, 
+                                               n_factors,
+                                               sparse=False)
+        self.item_factors = torch.nn.Embedding(n_items, 
+                                               n_factors,
+                                               sparse=False)
+        # Also should consider fitting overall bias (self.mu term) and both user and item bias vectors
+        
+        ## Incorporation of Bias Term
+        if useBias:
+            self.user_bias = torch.nn.Embedding(n_users, 1, sparse = False)
+            self.item_bias = torch.nn.Embedding(n_itms, 1, sparse = False)
+        
+        
+        # Mu is 1x1, user_bias is 1xn_users. item_bias is 1xn_items
+        
+    def getLoss(self):
+        return self.currentLoss
+
+
+    currentLoss = 2
+    useCUDA = False
+    
+    interactions = False
+#     loss_func = torch.nn.MSELoss()
+#     reg_loss_func = torch.optim.SGD(self.model.parameters(), lr=1e-6, weight_decay=1e-3)
+    
+    # For convenience when we want to predict a single user-item pair. 
+    def predict(self, user, item):
+        # Need to fit bias factorsx
+        print("Predicting")
+        
+        print(self.user_factors(user))
+        print(torch.transpose(self.item_factors(item),0,1))
+
+#         return torch.mm(self.user_factors(user)[0],torch.transpose(self.item_factors(item),0,1)[0])
+        return (self.user_factors(user) * self.item_factors(item)).sum(1)
+    
+    
+#         return torch.dot(self.user_factors(user),self.item_factors(item))
+    
+    # Much more efficient batch operator. This should be used for training purposes
+    def forward(self, users, items):
+        # Need to fit bias factors
+#         print("Forward")
+        return torch.mm(self.user_factors(users),torch.transpose(self.item_factors(items),0,1))
+    
+    def get_batch(self,batch_size,ratings):
+        # Sort our data and scramble it
+        rows, cols = ratings.shape
+        p = np.random.permutation(rows)
+
+        # create batches
+        sindex = 0
+        eindex = batch_size
+        while eindex < rows:
+            batch = p[sindex:eindex]
+            temp = eindex
+            eindex = eindex + batch_size
+            sindex = temp
+            yield batch
+
+        if eindex >= rows:
+            batch = range(sindex,rows)
+            yield batch 
+    
+    def run_test(self,batch_size,ratings_test):
+        predictionsArray = []
+        losses = []
+        print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
+        for i,batch in enumerate(model.get_batch(batch_size,ratings_test)):
+            print(i)
+            if self.useCUDA:
+                interactions = Variable(torch.cuda.FloatTensor(ratings_test[batch, :].toarray()))
+                rows = Variable(torch.cuda.LongTensor(batch))
+                cols = Variable(torch.cuda.LongTensor(np.arange(ratings_test.shape[1])))               
+            else:
+                interactions = Variable(torch.FloatTensor(ratings_test[batch, :].toarray()))
+                rows = Variable(torch.LongTensor(batch))
+                cols = Variable(torch.LongTensor(np.arange(ratings_test.shape[1])))
+
+            # Predict and calculate loss
+            predictions = model(rows, cols)
+#             print(type(predictions))
+            predictionsArray.append(predictions.data.cpu().numpy())
+            losses.append(self.loss_func(predictions, interactions))
+        return predictionsArray, losses
+    
+    def run_epoch(self,batch_size, ratings):
+        for i,batch in tqdm(enumerate(self.get_batch(batch_size, ratings))):
+            # Set gradients to zero
+            self.reg_loss_func.zero_grad()
+
+#             print(type(batch))
+            # Turn data into variables
+            if self.useCUDA:
+#                 print("using cuda")
+                interactions = Variable(torch.cuda.FloatTensor(ratings[batch, :].toarray()))
+                rows = Variable(torch.cuda.LongTensor(batch))
+                cols = Variable(torch.cuda.LongTensor(np.arange(ratings.shape[1])))               
+            else:
+                interactions = Variable(torch.FloatTensor(ratings[batch, :].toarray()))
+                rows = Variable(torch.LongTensor(batch))
+                cols = Variable(torch.LongTensor(np.arange(ratings.shape[1])))
+
+#             print(type(rows))
+#             print(type(cols))
+            # Predict and calculate loss
+            predictions = model(rows, cols)
+#             print(predictions)
+            self.currentLoss = self.loss_func(predictions, interactions)
+
+            # Backpropagate
+            self.currentLoss.backward()
+
+            # Update the parameters
+            self.reg_loss_func.step()
+    
+    def train(self, numEpochs, batch_size, ratings,learningRate):
+        self.loss_func = torch.nn.MSELoss()
+        self.reg_loss_func = torch.optim.SGD(model.parameters(), lr=learningRate, weight_decay=1e-3)
+        for i in range(numEpochs):
+            print(i)
+            self.run_epoch(batch_size,ratings)
+            
+    def convertArryToVariable(self, array):
+        if self.useCUDA:
+            return Variable(torch.cuda.LongTensor(array))
+        else:
+            return Variable(torch.LongTensor(array))
+
+
+    
+    def convertLillMatrixToVariable(self,lillMatrix):
+        if self.useCUDA:
+            if lillMatrix.shape[0] == 1:
+                # we have a single matrix
+                return Variable(torch.cuda.LongTensor(lillMatrix.toarray()))
+            else:
+                return Variable(torch.cuda.LongTensor(lillMatrix.toarray()))
+        else:
+            if lillMatrix.shape[0] == 1:
+                # we have a single matrix
+                return Variable(torch.LongTensor(lillMatrix.toarray()))
+            else:
+                return Variable(torch.LongTensor(lillMatrix.toarray()))
+
+
+
+
+
 def get_movielens_ratings(df):
     n_users = max(df.user_id.unique())
     n_items = max(df.item_id.unique())
@@ -13,69 +182,6 @@ def get_movielens_ratings(df):
     for row in df.itertuples():
         interactions[row[1] - 1, row[2] - 1] = row[3]
     return interactions
-
-def get_batch(batch_size,ratings):
-    # Sort our data and scramble it
-    rows, cols = ratings.shape
-    p = np.random.permutation(rows)
-    
-    # create batches
-    sindex = 0
-    eindex = batch_size
-    while eindex < rows:
-        batch = p[sindex:eindex]
-        temp = eindex
-        eindex = eindex + batch_size
-        sindex = temp
-        yield batch
-    
-    if eindex >= rows:
-        batch = range(sindex,rows)
-        yield batch
-
-def run_epoch():
-    for i,batch in enumerate(get_batch(BATCH_SIZE, ratings)):
-        # Set gradients to zero
-        reg_loss_func.zero_grad()
-        
-        # Turn data into variables
-        interactions = Variable(torch.FloatTensor(ratings[batch, :].toarray()))
-        rows = Variable(torch.LongTensor(batch))
-        cols = Variable(torch.LongTensor(np.arange(ratings.shape[1])))
-    
-        # Predict and calculate loss
-        predictions = model(rows, cols)
-        loss = loss_func(predictions, interactions)
-    
-        # Backpropagate
-        loss.backward()
-    
-        # Update the parameters
-        reg_loss_func.step()
-
-class MatrixFactorization(torch.nn.Module):
-    
-    def __init__(self, n_users, n_items, n_factors=5):
-        super().__init__()
-        self.user_factors = torch.nn.Embedding(n_users, 
-                                               n_factors,
-                                               sparse=False)
-        self.item_factors = torch.nn.Embedding(n_items, 
-                                               n_factors,
-                                               sparse=False)
-        # Also should consider fitting overall bias (self.mu term) and both user and item bias vectors
-        # Mu is 1x1, user_bias is 1xn_users. item_bias is 1xn_items
-    
-    # For convenience when we want to predict a sinble user-item pair. 
-    def predict(self, user, item):
-        # Need to fit bias factors
-        return (pred + self.user_factors(user) * self.item_factors(item)).sum(1)
-    
-    # Much more efficient batch operator. This should be used for training purposes
-    def forward(self, users, items):
-        # Need to fit bias factors
-        return torch.mm(self.user_factors(users),torch.transpose(self.item_factors(items),0,1))
-
 
 print("Starting")
 names = ['user_id', 'item_id', 'rating', 'timestamp']
@@ -94,46 +200,28 @@ print(test_ratings.shape)
 print("Prepared the data")
 
 
-model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2)
-
-print("Created the model")
+print("Creating Model")
+model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2,useBias = False)
 if torch.cuda.is_available():
     model.cuda()
-    print("Using CUDA")
 
-
-print("setting loss function")
-loss_func = torch.nn.MSELoss()
-reg_loss_func = torch.optim.SGD(model.parameters(), lr=1e-6, weight_decay=1e-3)
 
 
 print("Running the training")
-EPOCH = 2
+EPOCH = 1
 BATCH_SIZE = 1000 #50
 LR = 0.001
 
-for i in range(EPOCH):
-    print(i)
-    run_epoch()
+print("Training Model")
+model.train(EPOCH,BATCH_SIZE,ratings,LR)
 
-# print(model.)
+print("Model Loss: {}".format(model.getLoss()))
 
 
 print("Running Test")
 
-# predict on a single value
-# predictionsList = [] # this array will be the values of the current run
+predictions, losses = model.run_test(1,test_ratings)
 
-# for i,batch in enumerate(get_batch(BATCH_SIZE,test_ratings)):
-rows = Variable(torch.LongTensor(test_ratings[28665].toarray()[0]))
-cols = Variable(torch.LongTensor(test_ratings[:,0].T.toarray()[0]))
-predictions = model(rows, cols)
-
-print(predictions)
-
-# predictionsList.append(predictions.data.cpu().numpy())
-
-predictionsDF = pd.DataFrame(predictions)
-print(predictionsDF.head())
-predictionsDF.to_csv('testing.csv')
+print(len(predictions))
+print(np.mean(losses))
 

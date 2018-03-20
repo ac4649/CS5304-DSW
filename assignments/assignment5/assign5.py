@@ -198,15 +198,12 @@ loadPrevResults = False
 loadSavedMeans = False
 
 if loadPrevResults:
-    LambdaMeanLossResultsFrame = pd.read_csv('LambdaMeanLossResults.csv',index_col=0)
+    LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults.csv',index_col=0)
 
     print(LambdaMeanLossResultsFrame)
 else:
     LambdaMeanLossResultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
     print(LambdaMeanLossResultsFrame)
-
-if loadSavedMeans:
-    SavedMeansResultsFrame = pd.read_csv('LambdaMeanLossResults.csv',index_col=0)
 
 
 FileNames = ["r1","r2","r3","r4","r5"]
@@ -254,12 +251,12 @@ for fileName in FileNames:
         print(np.mean(losses))
 
         LambdaMeanLossResultsFrame.loc[fileName][str(LR)] = np.mean(losses)
-        LambdaMeanLossResultsFrame.to_csv('LambdaMeanLossResults.csv')
+        LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults.csv')
         print(LambdaMeanLossResultsFrame)
 
-    LambdaMeanLossResultsFrame.to_csv('LambdaMeanLossResults.csv')
+    LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults.csv')
 
-LambdaMeanLossResultsFrame.to_csv('LambdaMeanLossResults.csv')
+LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults.csv')
 
 print(LambdaMeanLossResultsFrame)
 

@@ -94,8 +94,8 @@ class MatrixFactorization(torch.nn.Module):
         predictionsArray = []
         losses = []
         print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
-        for i,batch in enumerate(model.get_batch(batch_size,ratings_test)):
-            # print(i)
+        for i,batch in tqdm(enumerate(model.get_batch(batch_size,ratings_test))):
+            print(i)
             if self.useCUDA:
                 interactions = Variable(torch.cuda.FloatTensor(ratings_test[batch, :].toarray()),volatile = True)
                 rows = Variable(torch.cuda.LongTensor(batch), volatile = True)
@@ -247,7 +247,7 @@ for fileName in FileNames:
 
         print("Model Loss: {}".format(model.getLoss()))
         print("Running Test")
-        predictions, losses = model.run_test(1000,test_ratings)
+        predictions, losses = model.run_test(10,test_ratings)
 
         print(len(predictions))
         print(np.mean(losses))

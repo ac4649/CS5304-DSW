@@ -40,7 +40,7 @@ class MatrixFactorization(torch.nn.Module):
         # Mu is 1x1, user_bias is 1xn_users. item_bias is 1xn_items
         
     def getLoss(self):
-        return self.currentLoss.data.cpu().numpy()
+        return self.currentLoss.data.cpu().numpy()[0]
 
 
     currentLoss = 10
@@ -197,11 +197,11 @@ def get_movielens_ratings(df):
 loadPrevResults = False
 loadSavedMeans = False
 
-EPOCH = 5 # Number of Epochs to train for
+EPOCH = 1 # Number of Epochs to train for
 BATCH_SIZE = 1000 #50
 LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 
-FileNames = ["r1","r2","r3","r4","r5"]
+FileNames = ["r4"]
 if loadPrevResults:
     LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)
 
@@ -253,8 +253,9 @@ for fileName in FileNames:
         print(np.mean(losses))
 
         LambdaMeanLossResultsFrame.loc[fileName][str(LR)] = np.mean(losses)
-        LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
         print(LambdaMeanLossResultsFrame)
+
+        LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
 
     LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
 

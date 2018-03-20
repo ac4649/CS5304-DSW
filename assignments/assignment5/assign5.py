@@ -197,8 +197,13 @@ def get_movielens_ratings(df):
 loadPrevResults = False
 loadSavedMeans = False
 
+EPOCH = 5 # Number of Epochs to train for
+BATCH_SIZE = 1000 #50
+LRs = [0.001, 0.01, 0.1] # array of learning rates to test
+
+FileNames = ["r1","r2","r3","r4","r5"]
 if loadPrevResults:
-    LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults.csv',index_col=0)
+    LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)
 
     print(LambdaMeanLossResultsFrame)
 else:
@@ -206,7 +211,6 @@ else:
     print(LambdaMeanLossResultsFrame)
 
 
-FileNames = ["r1","r2","r3","r4","r5"]
 
 print("Running Exmperiment on file ids {}".format(FileNames))
 for fileName in FileNames:
@@ -234,9 +238,7 @@ for fileName in FileNames:
         model.cuda()
 
     print("Running the training")
-    EPOCH = 1 # Number of Epochs to train for
-    BATCH_SIZE = 1000 #50
-    LRs = [0.001, 0.01, 0.1] # array of learning rates to test
+
     print("Learining Rates tested: {}".format(LRs))
     for LR in LRs:
         print("Training Model")
@@ -251,12 +253,12 @@ for fileName in FileNames:
         print(np.mean(losses))
 
         LambdaMeanLossResultsFrame.loc[fileName][str(LR)] = np.mean(losses)
-        LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults.csv')
+        LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
         print(LambdaMeanLossResultsFrame)
 
-    LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults.csv')
+    LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
 
-LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults.csv')
+LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
 
 print(LambdaMeanLossResultsFrame)
 

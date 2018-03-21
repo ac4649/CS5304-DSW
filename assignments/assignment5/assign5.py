@@ -33,8 +33,9 @@ class MatrixFactorization(torch.nn.Module):
         
         ## Incorporation of Bias Term
         if useBias:
+            self.useBias = True
             self.user_bias = torch.nn.Embedding(n_users, 1, sparse = False)
-            self.item_bias = torch.nn.Embedding(n_itms, 1, sparse = False)
+            self.item_bias = torch.nn.Embedding(n_items, 1, sparse = False)
         
         
         # Mu is 1x1, user_bias is 1xn_users. item_bias is 1xn_items
@@ -45,6 +46,7 @@ class MatrixFactorization(torch.nn.Module):
 
     currentLoss = 10
     useCUDA = False
+    useBias = False
     
     interactions = False
 #     loss_func = torch.nn.MSELoss()
@@ -59,8 +61,15 @@ class MatrixFactorization(torch.nn.Module):
         print(torch.transpose(self.item_factors(item),0,1))
 
 #         return torch.mm(self.user_factors(user)[0],torch.transpose(self.item_factors(item),0,1)[0])
-        return torch.mm(self.user_factors(user),torch.transpose(self.item_factors(item),0,1))
-    
+        # return torch.mm(self.user_factors(user),torch.transpose(self.item_factors(item),0,1))
+        if (self.useBias):
+            print(self.user_bias(user))
+            print(self.item_bias(item))
+            pred = self.user_bias(user) + self.item_bias(item)
+            pred += (self.user_factors(user) * self.item_factors(item)).sum(1)
+            return pred
+        else:
+            return torch.mm(self.user_factors(user),torch.transpose(self.item_factors(item),0,1))
     
 #         return torch.dot(self.user_factors(user),self.item_factors(item))
     
@@ -68,7 +77,19 @@ class MatrixFactorization(torch.nn.Module):
     def forward(self, users, items):
         # Need to fit bias factors
 #         print("Forward")
-        return torch.mm(self.user_factors(users),torch.transpose(self.item_factors(items),0,1))
+        if (self.useBias):
+            # print(self.user_bias(users))
+            # print(self.item_bias(items))
+            # pred = self.user_bias(users) + self.item_bias(items)
+            # pred += (self.user_factors(users) * self.item_factors(items)).sum(1)
+            # return pred
+            pred = torch.mm(self.user_factors(users),torch.transpose(self.item_factors(items),0,1))
+            # pred += user_bias.expand_as(pred)
+            pred += torch.transpose(self.item_bias(items),0,1).expand_as(pred)
+            return pred
+            # return torch.mm(self.user_bias(users) + self.user_factors(users),torch.transpose(self.item_bias(items) + self.item_factors(items),0,1))
+        else:
+            return torch.mm(self.user_factors(users),torch.transpose(self.item_factors(items),0,1))
     
     def get_batch(self,batch_size,ratings):
         # Sort our data and scramble it
@@ -94,7 +115,7 @@ class MatrixFactorization(torch.nn.Module):
         predictionsArray = []
         losses = []
         print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
-        for i,batch in tqdm(enumerate(model.get_batch(batch_size,ratings_test))):
+        for i,batch in enumerate(self.get_batch(batch_size,ratings_test)):
             # print(i)
             # print(batch)
             if self.useCUDA:
@@ -120,7 +141,7 @@ class MatrixFactorization(torch.nn.Module):
         return predictionsArray, losses
     
     def run_epoch(self,batch_size, ratings):
-        for i,batch in tqdm(enumerate(self.get_batch(batch_size, ratings))):
+        for i, batch in enumerate(self.get_batch(batch_size, ratings)):
             # Set gradients to zero
             self.reg_loss_func.zero_grad()
 
@@ -136,11 +157,7 @@ class MatrixFactorization(torch.nn.Module):
                 rows = Variable(torch.LongTensor(batch))
                 cols = Variable(torch.LongTensor(np.arange(ratings.shape[1])))
 
-#             print(type(rows))
-#             print(type(cols))
-            # Predict and calculate loss
-            predictions = model(rows, cols)
-#             print(predictions)
+            predictions = self(rows, cols)
             self.currentLoss = self.loss_func(predictions, interactions)
 
             # Backpropagate
@@ -151,7 +168,7 @@ class MatrixFactorization(torch.nn.Module):
     
     def train(self, numEpochs, batch_size, ratings,learningRate):
         self.loss_func = torch.nn.MSELoss()
-        self.reg_loss_func = torch.optim.SGD(model.parameters(), lr=learningRate, weight_decay=1e-3)
+        self.reg_loss_func = torch.optim.SGD(self.parameters(), lr=learningRate, weight_decay=1e-3)
         for i in range(numEpochs):
             print(i)
             self.run_epoch(batch_size,ratings)
@@ -219,96 +236,193 @@ def get_movielens_ratings_testLarger(df,n_users,n_items):
     return interactions
 
 
-#Task 1:
+def RunTask1():
+    print("Running Task 1:")
 
-loadPrevResults = False
-loadSavedMeans = False
+    loadPrevResults = False
+    loadSavedMeans = False
 
-EPOCH = 10 # Number of Epochs to train for
-BATCH_SIZE = 1000 #50
-LRs = [0.001, 0.01, 0.1] # array of learning rates to test
+    EPOCH = 1 # Number of Epochs to train for
+    BATCH_SIZE = 1000 #50
+    LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 
-FileNames = [
-    "r1"
-    ,
-    "r2"
-    ,
-    "r3"
-    ,
-    "r4"
-    ,
-    "r5"
-    ]
-if loadPrevResults:
-    LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)
+    FileNames = [
+        "r1"
+        ,
+        "r2"
+        ,
+        "r3"
+        ,
+        "r4"
+        ,
+        "r5"
+        ]
+    if loadPrevResults:
+        LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)
 
-    print(LambdaMeanLossResultsFrame)
-else:
-    LambdaMeanLossResultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
-    print(LambdaMeanLossResultsFrame)
-
-
-
-print("Running Exmperiment on file ids {}".format(FileNames))
-for fileName in FileNames:
-
-    print("Starting Building model for cross validation {}".format(fileName))
-    names = ['user_id', 'item_id', 'rating', 'timestamp']
-    print("Loading Data")
-    df_train = pd.read_csv('ml-10M100K/'+fileName+'.train', sep='::', names=names,engine='python')
-    print("Loaded train data")
-    df_test = pd.read_csv('ml-10M100K/'+fileName+'.test', sep='::', names=names,engine='python')
-    print("Loaded Data")
-
-
-    if fileName == 'r5': # This is the special case where the test set is at the end of the file so the ids are larger.
-        numUsers, numItems = getUserItemNumbers(df_train,df_test)
-
-        ratings = get_movielens_ratings(df_train)
-        # ratings = get_movielens_ratings(df_train)
-        print(ratings.shape)
-        test_ratings = get_movielens_ratings_testLarger(df_test,numUsers,numItems)
-        # test_ratings = get_movielens_ratings(df_test)
-        print(test_ratings.shape)
-    else:
-        # ratings = get_movielens_ratings(df_train,numUsers,numItems)
-        ratings = get_movielens_ratings(df_train)
-        print(ratings.shape)
-        # test_ratings = get_movielens_ratings(df_test,numUsers,numItems)
-        test_ratings = get_movielens_ratings(df_test)
-        print(test_ratings.shape)
-
-    print("Prepared the data")
-
-
-    print("Creating Model")
-    model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2,useBias = False)
-    if torch.cuda.is_available():
-        model.cuda()
-
-    print("Running the training")
-
-    print("Learining Rates tested: {}".format(LRs))
-    for LR in LRs:
-        print("Training Model")
-        print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
-        model.train(EPOCH,BATCH_SIZE,ratings,LR)
-
-        print("Model Loss: {}".format(model.getLoss()))
-        print("Running Test")
-        predictions, losses = model.run_test(100,test_ratings)
-
-        print(len(predictions))
-        print(np.mean(losses))
-
-        LambdaMeanLossResultsFrame.loc[fileName][str(LR)] = np.mean(losses)
         print(LambdaMeanLossResultsFrame)
+    else:
+        LambdaMeanLossResultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
+        print(LambdaMeanLossResultsFrame)
+
+
+
+    print("Running Exmperiment on file ids {}".format(FileNames))
+    for fileName in FileNames:
+
+        print("Starting Building model for cross validation {}".format(fileName))
+        names = ['user_id', 'item_id', 'rating', 'timestamp']
+        print("Loading Data")
+        df_train = pd.read_csv('ml-10M100K/'+fileName+'.train', sep='::', names=names,engine='python')
+        print("Loaded train data")
+        df_test = pd.read_csv('ml-10M100K/'+fileName+'.test', sep='::', names=names,engine='python')
+        print("Loaded Data")
+
+
+        if fileName == 'r5': # This is the special case where the test set is at the end of the file so the ids are larger.
+            numUsers, numItems = getUserItemNumbers(df_train,df_test)
+
+            ratings = get_movielens_ratings(df_train)
+            # ratings = get_movielens_ratings(df_train)
+            print(ratings.shape)
+            test_ratings = get_movielens_ratings_testLarger(df_test,numUsers,numItems)
+            # test_ratings = get_movielens_ratings(df_test)
+            print(test_ratings.shape)
+        else:
+            # ratings = get_movielens_ratings(df_train,numUsers,numItems)
+            ratings = get_movielens_ratings(df_train)
+            print(ratings.shape)
+            # test_ratings = get_movielens_ratings(df_test,numUsers,numItems)
+            test_ratings = get_movielens_ratings(df_test)
+            print(test_ratings.shape)
+
+        print("Prepared the data")
+
+
+        print("Creating Model")
+        model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2,useBias = False)
+        if torch.cuda.is_available():
+            model.cuda()
+
+        print("Running the training")
+
+        print("Learining Rates tested: {}".format(LRs))
+        for LR in LRs:
+            print("Training Model")
+            print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
+            model.train(EPOCH,BATCH_SIZE,ratings,LR)
+
+            print("Model Loss: {}".format(model.getLoss()))
+            print("Running Test")
+            predictions, losses = model.run_test(100,test_ratings)
+
+            print(len(predictions))
+            print(np.mean(losses))
+
+            LambdaMeanLossResultsFrame.loc[fileName][str(LR)] = np.mean(losses)
+            print(LambdaMeanLossResultsFrame)
+
+            LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
 
         LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
 
     LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
 
-LambdaMeanLossResultsFrame.to_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
+    print(LambdaMeanLossResultsFrame)
 
-print(LambdaMeanLossResultsFrame)
+def RunTask2():
+    print("Running Task 2:")
 
+    loadPrevResults = False
+    loadSavedMeans = False
+
+    EPOCH = 5 # Number of Epochs to train for
+    BATCH_SIZE = 1000 #50
+    LRs = [0.001, 0.01, 0.1] # array of learning rates to test
+
+    FileNames = [
+        "r1"
+        ,
+        "r2"
+        ,
+        "r3"
+        ,
+        "r4"
+        ,
+        "r5"
+        ]
+    if loadPrevResults:
+        LambdaMeanLossResultsFrame = pd.read_csv('Task2_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)
+
+        print(LambdaMeanLossResultsFrame)
+    else:
+        LambdaMeanLossResultsFrame = pd.DataFrame(index=["r1","r2","r3","r4","r5"], columns=['0.001','0.01','0.1'])
+        print(LambdaMeanLossResultsFrame)
+
+
+
+    print("Running Exmperiment on file ids {}".format(FileNames))
+    for fileName in FileNames:
+
+        print("Starting Building model for cross validation {}".format(fileName))
+        names = ['user_id', 'item_id', 'rating', 'timestamp']
+        print("Loading Data")
+        df_train = pd.read_csv('ml-10M100K/'+fileName+'.train', sep='::', names=names,engine='python')
+        print("Loaded train data")
+        df_test = pd.read_csv('ml-10M100K/'+fileName+'.test', sep='::', names=names,engine='python')
+        print("Loaded Data")
+
+
+        if fileName == 'r5': # This is the special case where the test set is at the end of the file so the ids are larger.
+            numUsers, numItems = getUserItemNumbers(df_train,df_test)
+
+            ratings = get_movielens_ratings(df_train)
+            # ratings = get_movielens_ratings(df_train)
+            print(ratings.shape)
+            test_ratings = get_movielens_ratings_testLarger(df_test,numUsers,numItems)
+            # test_ratings = get_movielens_ratings(df_test)
+            print(test_ratings.shape)
+        else:
+            # ratings = get_movielens_ratings(df_train,numUsers,numItems)
+            ratings = get_movielens_ratings(df_train)
+            print(ratings.shape)
+            # test_ratings = get_movielens_ratings(df_test,numUsers,numItems)
+            test_ratings = get_movielens_ratings(df_test)
+            print(test_ratings.shape)
+
+        print("Prepared the data")
+
+
+        print("Creating Model")
+        model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2,useBias = True)
+        if torch.cuda.is_available():
+            model.cuda()
+
+        print("Running the training")
+
+        print("Learining Rates tested: {}".format(LRs))
+        for LR in LRs:
+            print("Training Model")
+            print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
+            model.train(EPOCH,BATCH_SIZE,ratings,LR)
+
+            print("Model Loss: {}".format(model.getLoss()))
+            print("Running Test")
+            predictions, losses = model.run_test(100,test_ratings)
+
+            print(len(predictions))
+            print(np.mean(losses))
+
+            LambdaMeanLossResultsFrame.loc[fileName][str(LR)] = np.mean(losses)
+            print(LambdaMeanLossResultsFrame)
+
+            LambdaMeanLossResultsFrame.to_csv('Task2_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
+
+        LambdaMeanLossResultsFrame.to_csv('Task2_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
+
+    LambdaMeanLossResultsFrame.to_csv('Task2_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH))
+
+    print(LambdaMeanLossResultsFrame)
+
+
+RunTask2()

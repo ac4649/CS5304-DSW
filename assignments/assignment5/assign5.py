@@ -221,10 +221,10 @@ def get_movielens_ratings_testLarger(df,n_users,n_items):
 
 #Task 1:
 
-loadPrevResults = True
+loadPrevResults = False
 loadSavedMeans = False
 
-EPOCH = 1 # Number of Epochs to train for
+EPOCH = 5 # Number of Epochs to train for
 BATCH_SIZE = 1000 #50
 LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 

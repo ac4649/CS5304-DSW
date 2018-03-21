@@ -229,14 +229,14 @@ BATCH_SIZE = 1000 #50
 LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 
 FileNames = [
-    # "r1"
-    # ,
-    # "r2"
-    # ,
-    # "r3"
-    # ,
-    # "r4"
-    # ,
+    "r1"
+    ,
+    "r2"
+    ,
+    "r3"
+    ,
+    "r4"
+    ,
     "r5"
     ]
 if loadPrevResults:

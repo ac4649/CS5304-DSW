@@ -261,7 +261,7 @@ for fileName in FileNames:
     print("Loaded Data")
 
 
-    if fileName == 'r5':
+    if fileName == 'r5': # This is the special case where the test set is at the end of the file so the ids are larger.
         numUsers, numItems = getUserItemNumbers(df_train,df_test)
 
         ratings = get_movielens_ratings(df_train)

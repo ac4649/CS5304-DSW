@@ -102,9 +102,9 @@ class MatrixFactorization(torch.nn.Module):
                 rows = Variable(torch.cuda.LongTensor(batch), volatile = True)
                 cols = Variable(torch.cuda.LongTensor(np.arange(ratings_test.shape[1])), volatile = True)               
             else:
-                interactions = Variable(torch.FloatTensor(ratings_test[batch, :].toarray()))
-                rows = Variable(torch.LongTensor(batch))
-                cols = Variable(torch.LongTensor(np.arange(ratings_test.shape[1])))
+                interactions = Variable(torch.FloatTensor(ratings_test[batch, :].toarray()),volatile = True)
+                rows = Variable(torch.LongTensor(batch),volatile = True)
+                cols = Variable(torch.LongTensor(np.arange(ratings_test.shape[1])),volatile = True)
 
             # Predict and calculate loss
             predictions = self(rows, cols)
@@ -190,36 +190,22 @@ def getUserItemNumbers(trainDF,testDF):
     return max(n_userTrain,n_userTest), max(n_itemsTrain,n_itemsTest)
 
 
-# def get_movielens_ratings(df):
-#     n_users = max(df.user_id.unique())
-#     n_items = max(df.item_id.unique())
-#     # print(n_users)
-#     # print(n_items)
-#     interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
-#     for row in df.itertuples():
-#         interactions[row[1] - 1, row[2] - 1] = row[3]
-#     return interactions
-
-def get_movielens_ratings(df,n_users,n_items):
+def get_movielens_ratings(df):
+    n_users = max(df.user_id.unique())
+    n_items = max(df.item_id.unique())
+    # print(n_users)
+    # print(n_items)
     interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
     for row in df.itertuples():
         interactions[row[1] - 1, row[2] - 1] = row[3]
     return interactions
 
-# def reSplit(df,n_users,n_items): # we want to make sure users match 
+def get_movielens_ratings_testLarger(df,n_users,n_items):
 
-#     # print(max(df.user_id.unique()))
-#     # print(max(df.item_id.unique()))
-#     # print(n_users)
-#     # print(n_items)
-#     # n_items = max(df.item_id.unique())
-#     interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
-#     for row in df.itertuples():
-#         interactions[row[1] - 1, row[2] - 1] = row[3]
-#     return interactions
-
-    
-
+    interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
+    for row in df.itertuples():
+        interactions[row[1] - 1, row[2] - 1] = row[3]
+    return interactions
 
 
 #Task 1:
@@ -231,7 +217,17 @@ EPOCH = 1 # Number of Epochs to train for
 BATCH_SIZE = 1000 #50
 LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 
-FileNames = ["r1","r2","r3","r4","r5"]
+FileNames = [
+    # "r1"
+    # ,
+    # "r2"
+    # ,
+    # "r3"
+    # ,
+    # "r4"
+    # ,
+    "r5"
+    ]
 if loadPrevResults:
     LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)
 
@@ -254,12 +250,22 @@ for fileName in FileNames:
     print("Loaded Data")
 
 
-    numUsers, numItems = getUserItemNumbers(df_train,df_test)
+    if fileName == 'r5':
+        numUsers, numItems = getUserItemNumbers(df_train,df_test)
 
-    ratings = get_movielens_ratings(df_train,numUsers,numItems)
-    print(ratings.shape)
-    test_ratings = get_movielens_ratings(df_test,numUsers,numItems)
-    print(test_ratings.shape)
+        ratings = get_movielens_ratings(df_train)
+        # ratings = get_movielens_ratings(df_train)
+        print(ratings.shape)
+        test_ratings = get_movielens_ratings_testLarger(df_test,numUsers,numItems)
+        # test_ratings = get_movielens_ratings(df_test)
+        print(test_ratings.shape)
+    else:
+        # ratings = get_movielens_ratings(df_train,numUsers,numItems)
+        ratings = get_movielens_ratings(df_train)
+        print(ratings.shape)
+        # test_ratings = get_movielens_ratings(df_test,numUsers,numItems)
+        test_ratings = get_movielens_ratings(df_test)
+        print(test_ratings.shape)
 
     print("Prepared the data")
 
@@ -279,7 +285,7 @@ for fileName in FileNames:
 
         print("Model Loss: {}".format(model.getLoss()))
         print("Running Test")
-        predictions, losses = model.run_test(10,test_ratings)
+        predictions, losses = model.run_test(100,test_ratings)
 
         print(len(predictions))
         print(np.mean(losses))

@@ -202,9 +202,20 @@ def get_movielens_ratings(df):
 
 def get_movielens_ratings_testLarger(df,n_users,n_items):
 
+    start_user = min(df.user_id.unique())
+    start_item = min(df.item_id.unique())
+    n_users = n_users - start_user
+    # print(start_user)
+    # print(n_users)
+    n_items = n_items - start_item
+    # print(start_item)
+    # print(n_items)
     interactions = lil_matrix( (n_users,n_items), dtype=float) #np.zeros((n_users, n_items))
     for row in df.itertuples():
-        interactions[row[1] - 1, row[2] - 1] = row[3]
+        # print(row[1])
+        # print(row[2])
+        # print(row[3])
+        interactions[row[1] - 1 - start_user, row[2] - 1 - start_item] = row[3]
     return interactions
 
 
@@ -218,15 +229,15 @@ BATCH_SIZE = 1000 #50
 LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 
 FileNames = [
-    "r1"
-    ,
-    "r2"
-    ,
-    "r3"
-    ,
-    "r4"
+    # "r1"
     # ,
-    # "r5"
+    # "r2"
+    # ,
+    # "r3"
+    # ,
+    # "r4"
+    # ,
+    "r5"
     ]
 if loadPrevResults:
     LambdaMeanLossResultsFrame = pd.read_csv('Task1_LambdaMeanLossResults_{}Epochs.csv'.format(EPOCH),index_col=0)

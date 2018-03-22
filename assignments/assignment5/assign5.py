@@ -112,7 +112,7 @@ class MatrixFactorization(torch.nn.Module):
     
     def run_test(self,batch_size,ratings_test):
 
-        predictionsArray = []
+        predictionsArray = -1 # start the predictions array as -1 then in the loop create the np array returned
         losses = []
         print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
         for i,batch in enumerate(self.get_batch(batch_size,ratings_test)):
@@ -131,7 +131,11 @@ class MatrixFactorization(torch.nn.Module):
             predictions = self(rows, cols)
             # predictions = self.predict(rows,cols)
 #              print(type(predictions))
-            predictionsArray.append(predictions.data.cpu().numpy())
+            if predictionsArray == -1:
+                predictionsArray = predictions.data.cpu().numpy()
+            else:
+                predictionsArray.concatenate(predictions.data.cpu().numpy())
+            print(predictionsArray.shape)
             # print(type(self.loss_func(predictions, interactions)))
             losses.append(self.loss_func(predictions, interactions).data.cpu().numpy())
 
@@ -428,7 +432,7 @@ def RunTask2():
 def RunTask3():
     print("Running Task 3:")
 
-    EPOCH = 5 # Number of Epochs to train for
+    EPOCH = 1 # Number of Epochs to train for
     BATCH_SIZE = 1000 #50
     LRs = [0.1] # array of learning rates to test
 
@@ -487,8 +491,11 @@ def RunTask3():
             predictions, losses = model.run_test(100,test_ratings)
 
             # now we recommend something
-            print(pd.DataFrame(test_ratings).to_csv('test.csv'))
-            print(pd.DataFrame(predictions).to_csv('test_Predictions.csv'))
+
+            print(type(test_ratings))
+            print(test_ratings.shape)
+            print(type(predictions))
+            print(len(predictions))
 
 # RunTask1()
 # RunTask2()

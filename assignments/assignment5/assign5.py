@@ -242,7 +242,7 @@ def RunTask1():
     loadPrevResults = False
     loadSavedMeans = False
 
-    EPOCH = 1 # Number of Epochs to train for
+    EPOCH = 5 # Number of Epochs to train for
     BATCH_SIZE = 1000 #50
     LRs = [0.001, 0.01, 0.1] # array of learning rates to test
 
@@ -425,4 +425,71 @@ def RunTask2():
     print(LambdaMeanLossResultsFrame)
 
 
-RunTask2()
+def RunTask3():
+    print("Running Task 3:")
+
+    EPOCH = 5 # Number of Epochs to train for
+    BATCH_SIZE = 1000 #50
+    LRs = [0.1] # array of learning rates to test
+
+    FileNames = ["r5"]
+
+    print("Running Exmperiment on file ids {}".format(FileNames))
+    for fileName in FileNames:
+
+        print("Starting Building model for cross validation {}".format(fileName))
+        names = ['user_id', 'item_id', 'rating', 'timestamp']
+        print("Loading Data")
+        df_train = pd.read_csv('ml-10M100K/'+fileName+'.train', sep='::', names=names,engine='python')
+        print("Loaded train data")
+        df_test = pd.read_csv('ml-10M100K/'+fileName+'.test', sep='::', names=names,engine='python')
+        print("Loaded Data")
+
+
+        if fileName == 'r5': # This is the special case where the test set is at the end of the file so the ids are larger.
+            numUsers, numItems = getUserItemNumbers(df_train,df_test)
+
+            ratings = get_movielens_ratings(df_train)
+            # ratings = get_movielens_ratings(df_train)
+            print(ratings.shape)
+            test_ratings = get_movielens_ratings_testLarger(df_test,numUsers,numItems)
+            # test_ratings = get_movielens_ratings(df_test)
+            print(test_ratings.shape)
+        else:
+            # ratings = get_movielens_ratings(df_train,numUsers,numItems)
+            ratings = get_movielens_ratings(df_train)
+            print(ratings.shape)
+            # test_ratings = get_movielens_ratings(df_test,numUsers,numItems)
+            test_ratings = get_movielens_ratings(df_test)
+            print(test_ratings.shape)
+
+        print("Prepared the data")
+
+
+        print("Creating Model")
+        model = MatrixFactorization(ratings.shape[0], ratings.shape[1], n_factors=2,useBias = False)
+        if torch.cuda.is_available():
+            model.cuda()
+
+        print("Running the training")
+
+        print("Learining Rates tested: {}".format(LRs))
+        for LR in LRs:
+            print("Training Model")
+            print("Number iterations Per Epoch: {}".format(ratings.shape[0]/BATCH_SIZE))
+            model.train(EPOCH,BATCH_SIZE,ratings,LR)
+
+            print("Model Loss: {}".format(model.getLoss()))
+            print("Running Test")
+
+
+            # do predictions here
+            predictions, losses = model.run_test(100,test_ratings)
+
+            # now we recommend something
+            print(pd.DataFrame(test_ratings).to_csv('test.csv'))
+            print(pd.DataFrame(predictions).to_csv('test_Predictions.csv'))
+
+# RunTask1()
+# RunTask2()
+RunTask3()

@@ -5,8 +5,6 @@ import torch
 from torch.autograd import Variable
 import pandas as pd
 
-from tqdm import * # remove before submission
-
 
 class MatrixFactorization(torch.nn.Module):
 
@@ -112,7 +110,7 @@ class MatrixFactorization(torch.nn.Module):
     
     def run_test(self,batch_size,ratings_test):
 
-        predictionsArray = -1 # start the predictions array as -1 then in the loop create the np array returned
+        predictionsArray = None # start the predictions array as -1 then in the loop create the np array returned
         losses = []
         print("Number Batches: {}".format(ratings_test.shape[0]/batch_size))
         for i,batch in enumerate(self.get_batch(batch_size,ratings_test)):
@@ -130,12 +128,12 @@ class MatrixFactorization(torch.nn.Module):
             # Predict and calculate loss
             predictions = self(rows, cols)
             # predictions = self.predict(rows,cols)
-#              print(type(predictions))
-            if predictionsArray == -1:
+
+            if type(predictionsArray) is not np.ndarray:
                 predictionsArray = predictions.data.cpu().numpy()
             else:
-                predictionsArray.concatenate(predictions.data.cpu().numpy())
-            print(predictionsArray.shape)
+                predictionsArray = np.append(predictionsArray,predictions.data.cpu().numpy(),axis = 0)
+            # print(predictionsArray.shape)
             # print(type(self.loss_func(predictions, interactions)))
             losses.append(self.loss_func(predictions, interactions).data.cpu().numpy())
 
@@ -224,7 +222,7 @@ def get_movielens_ratings(df):
 def get_movielens_ratings_testLarger(df,n_users,n_items):
 
     start_user = min(df.user_id.unique())
-    start_item = min(df.item_id.unique())
+    start_item = 0
     n_users = n_users - start_user
     # print(start_user)
     # print(n_users)
@@ -491,12 +489,29 @@ def RunTask3():
             predictions, losses = model.run_test(100,test_ratings)
 
             # now we recommend something
+            # print(type(test_ratings))
+            # print(test_ratings)
+            print("Predictions:")           
+            # print(type(predictions))
+            print(predictions.shape)
 
-            print(type(test_ratings))
-            print(test_ratings.shape)
-            print(type(predictions))
-            print(len(predictions))
+            # As a first draft, do just top 5.
+            
+            # print(max(df_test.user_id.unique()))
+            # print(min(df_test.user_id.unique()))
+            # userIndex = list(range(min(df_test.user_id.unique()),max(df_test.user_id.unique())))
+            # print(userIndex)
+            # # print(predictions.argsort(axis = 0)[:5])
 
-# RunTask1()
-# RunTask2()
-RunTask3()
+            # print("Taking top 5")
+            # savedPredictions = predictions.argsort(axis = 0)[:5]
+            # print(savedPredictions.shape)
+            # topMovies = pd.DataFrame(data = savedPredictions, index=userIndex.shape[0])
+            # print("Saving:")
+            # np.savetxt("results.csv", topMovies, delimiter="\t")
+            
+
+
+# RunTask1() # uncomment to run task 1
+# RunTask2() # Uncomment to run task 2
+RunTask3() # uncomment to run task 3

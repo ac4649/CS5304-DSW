@@ -143,7 +143,7 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
     ax.grid()
 
     fig.savefig(imageName)
-    print("Saved isomap figure")
+    print("Saved TSNE figure")
 
     return
 

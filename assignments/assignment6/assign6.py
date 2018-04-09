@@ -9,11 +9,12 @@ from sklearn.manifold import TSNE
 
 import matplotlib.pyplot as plt
 
-from fashion-mnist import model
+from fashionmnist import model
 
-import 
+import torch
 
 from tqdm import * # remove 
+
 
 X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
 X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
@@ -106,7 +107,7 @@ def applyISOMAP(XtrainDF, yTrainSeries, nFeatures):
 
     return
 
-def applyTSNE(XtrainDF, yTrainSeries, nFeatures):
+def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
     XtrainDFStandard = StandardScaler().fit_transform(XtrainDF)
     tsnemodel = TSNE(n_components=nFeatures)
     XtrainPrincipalComponents = tsnemodel.fit_transform(XtrainDFStandard)
@@ -141,26 +142,28 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures):
     ax.legend(targets)
     ax.grid()
 
-    fig.savefig('tsne.png')
+    fig.savefig(imageName)
     print("Saved isomap figure")
 
     return
 
 
-applyPCA(X_train,y_train,2)
+# applyPCA(X_train,y_train,2)
 
 #training isomap on 30% of the data
 subsetX_train = X_train.sample(frac=0.30)
 subsetY_train = y_train.iloc[subsetX_train.index.values]
 print("Sample Size: " + str(subsetX_train.shape[0]))
-applyISOMAP(subsetX_train,subsetY_train,2)
+# applyISOMAP(subsetX_train,subsetY_train,2)
 
 
-# using the trained 
+applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
+
+# using the trained model
 # load the model
 model = torch.load('/fashion-mnist/FashionSimpleNet-run-1.pth.tar')
 print(model)
-# applyTSNE(subsetX_train,subsetY_train,2)
+# applyTSNE(subsetX_train,subsetY_train,2,'tsne-resnet.png')
 
 
 

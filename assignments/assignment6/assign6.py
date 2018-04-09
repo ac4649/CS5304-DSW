@@ -9,7 +9,9 @@ from sklearn.manifold import TSNE
 
 import matplotlib.pyplot as plt
 
-from model import FashionSimpleNet
+from fashion-mnist import model
+
+import 
 
 from tqdm import * # remove 
 
@@ -155,8 +157,8 @@ applyISOMAP(subsetX_train,subsetY_train,2)
 
 
 # using the trained 
-# model = FashionSimpleNet()
-
+# load the model
+model = model
 applyTSNE(subsetX_train,subsetY_train,2)
 
 

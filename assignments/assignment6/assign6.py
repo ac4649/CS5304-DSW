@@ -9,7 +9,7 @@ from sklearn.manifold import TSNE
 
 import matplotlib.pyplot as plt
 
-from fashionmnist import model
+from fashionmnist.model import FashionSimpleNet
 
 import torch
 
@@ -148,21 +148,22 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
     return
 
 
-applyPCA(X_train,y_train,2)
+# applyPCA(X_train,y_train,2)
 
-#training isomap on 30% of the data
+# #training isomap on 30% of the data
 subsetX_train = X_train.sample(frac=0.30)
 subsetY_train = y_train.iloc[subsetX_train.index.values]
 print("Sample Size: " + str(subsetX_train.shape[0]))
-applyISOMAP(subsetX_train,subsetY_train,2)
+# applyISOMAP(subsetX_train,subsetY_train,2)
 
 
-applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
+# applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
 
 # using the trained model
 # load the model
-model = torch.load('fashionmnist/saved-models/FashionSimpleNet-run-1.pth.tar')
-# print(model)
+model = FashionSimpleNet()
+model.load_state_dict(torch.load('fashionmnist/saved-models/FashionSimpleNet-run-1.pth.tar')['state_dict'])
+print(model.classifier[3])
 # applyTSNE(subsetX_train,subsetY_train,2,'tsne-resnet.png')
 
 

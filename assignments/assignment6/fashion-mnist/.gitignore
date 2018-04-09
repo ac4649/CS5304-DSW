@@ -101,6 +101,5 @@ ENV/
 .mypy_cache/
 
 data/
-saved-models/
 logs/
 data-mnist/

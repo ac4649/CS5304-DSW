@@ -5,8 +5,11 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.manifold import Isomap
+from sklearn.manifold import TSNE
 
 import matplotlib.pyplot as plt
+
+from model import FashionSimpleNet
 
 from tqdm import * # remove 
 
@@ -71,9 +74,9 @@ def applyISOMAP(XtrainDF, yTrainSeries, nFeatures):
 
     fig = plt.figure(figsize = (8,8))
     ax = fig.add_subplot(1,1,1) 
-    ax.set_xlabel('Principal Component 1', fontsize = 15)
-    ax.set_ylabel('Principal Component 2', fontsize = 15)
-    ax.set_title('2 component PCA', fontsize = 20)
+    ax.set_xlabel('ISOMAP Principal Component 1', fontsize = 15)
+    ax.set_ylabel('ISOMAP Principal Component 2', fontsize = 15)
+    ax.set_title('2 component ISOMAP', fontsize = 20)
     targets = list(set(yTrainSeries.values))
     colors = [
         [1,0,0,1],
@@ -101,6 +104,47 @@ def applyISOMAP(XtrainDF, yTrainSeries, nFeatures):
 
     return
 
+def applyTSNE(XtrainDF, yTrainSeries, nFeatures):
+    XtrainDFStandard = StandardScaler().fit_transform(XtrainDF)
+    tsnemodel = TSNE(n_components=nFeatures)
+    XtrainPrincipalComponents = tsnemodel.fit_transform(XtrainDFStandard)
+    XtrainPrincipalComponentsDF = pd.DataFrame(XtrainPrincipalComponents,columns=['pc'+str(i) for i in range(nFeatures)])
+
+    resultsDF = pd.concat([XtrainPrincipalComponentsDF, yTrainSeries], axis = 1)
+
+    fig = plt.figure(figsize = (8,8))
+    ax = fig.add_subplot(1,1,1) 
+    ax.set_xlabel('TSNE Principal Component 1', fontsize = 15)
+    ax.set_ylabel('TSNE Principal Component 2', fontsize = 15)
+    ax.set_title('2 component TSNE', fontsize = 20)
+    targets = list(set(yTrainSeries.values))
+    colors = [
+        [1,0,0,1],
+        [0.5,0,0,1],
+        [0,1,0,1],
+        [0,0.5,0,1],
+        [0,0,1,1],
+        [0,0,0.5,1],
+        [1,1,0,1],
+        [0.5,0.5,0,1],
+        [0,1,1,1],
+        [0,0.5,0.5,1]
+        ]
+    for target in tqdm(targets):
+        indicesToKeep = resultsDF[0] == target
+        ax.scatter(resultsDF.loc[indicesToKeep, 'pc0']
+                , resultsDF.loc[indicesToKeep, 'pc1']
+                , c = colors[target]
+                , s = 50)
+    ax.legend(targets)
+    ax.grid()
+
+    fig.savefig('tsne.png')
+    print("Saved isomap figure")
+
+    return
+
+
 applyPCA(X_train,y_train,2)
 
 #training isomap on 30% of the data
@@ -109,6 +153,11 @@ subsetY_train = y_train.iloc[subsetX_train.index.values]
 print("Sample Size: " + str(subsetX_train.shape[0]))
 applyISOMAP(subsetX_train,subsetY_train,2)
 
+
+# using the trained 
+# model = FashionSimpleNet()
+
+applyTSNE(subsetX_train,subsetY_train,2)
 
 
 

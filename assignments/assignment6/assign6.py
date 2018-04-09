@@ -158,8 +158,9 @@ applyISOMAP(subsetX_train,subsetY_train,2)
 
 # using the trained 
 # load the model
-model = model
-applyTSNE(subsetX_train,subsetY_train,2)
+model = torch.load('/fashion-mnist/FashionSimpleNet-run-1.pth.tar')
+print(model)
+# applyTSNE(subsetX_train,subsetY_train,2)
 
 
 

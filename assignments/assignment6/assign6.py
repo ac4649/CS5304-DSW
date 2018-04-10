@@ -15,14 +15,34 @@ import torch
 
 from tqdm import * # remove 
 
-
-X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
-X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
-
-X_train = pd.DataFrame(X_train)
-y_train = pd.Series(y_train)
-X_test = pd.DataFrame(X_test)
-y_test = pd.Series(y_test)
+def getColorScheme():
+    # Map y labels to colors to visualize
+    colors = [
+        'tab:blue',
+        'tab:orange',
+        'tab:green',
+        'tab:red',
+        'tab:purple',
+        'tab:brown',
+        'tab:pink',
+        'tab:gray',
+        'tab:olive',
+        'tab:cyan'
+    ]
+    labelVals = [
+        'T-shirt/top',
+        'Trouser',
+        'Pullover',
+        'Dress',
+        'Coat',
+        'Sandal',
+        'Shirt',
+        'Sneaker',
+        'Bag',
+        'Ankle boot'
+    ]
+    customColorMap = dict(zip(np.unique(y_train), colors))
+    y_train_colored = list(map(lambda classVal: customColorMap[classVal], y_train))
 
 ## applyPCA
 def applyPCA(XtrainDF, yTrainSeries, nFeatures):
@@ -53,7 +73,7 @@ def applyPCA(XtrainDF, yTrainSeries, nFeatures):
         [0,0.5,0.5,1]
         ]
     for target in tqdm(targets):
-        indicesToKeep = resultsDF[0] == target
+        indicesToKeep = (resultsDF[0] == target)
         ax.scatter(resultsDF.loc[indicesToKeep, 'pc0']
                 , resultsDF.loc[indicesToKeep, 'pc1']
                 , c = colors[target]
@@ -94,7 +114,7 @@ def applyISOMAP(XtrainDF, yTrainSeries, nFeatures):
         [0,0.5,0.5,1]
         ]
     for target in tqdm(targets):
-        indicesToKeep = resultsDF[0] == target
+        indicesToKeep = (resultsDF[0] == target)
         ax.scatter(resultsDF.loc[indicesToKeep, 'pc0']
                 , resultsDF.loc[indicesToKeep, 'pc1']
                 , c = colors[target]
@@ -134,7 +154,7 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
         [0,0.5,0.5,1]
         ]
     for target in tqdm(targets):
-        indicesToKeep = resultsDF[0] == target
+        indicesToKeep = (resultsDF[0] == target)
         ax.scatter(resultsDF.loc[indicesToKeep, 'pc0']
                 , resultsDF.loc[indicesToKeep, 'pc1']
                 , c = colors[target]
@@ -147,13 +167,22 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
 
     return
 
+X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
+X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
+print(type(X_train))
+
+X_train = pd.DataFrame(X_train)
+y_train = pd.Series(y_train)
+X_test = pd.DataFrame(X_test)
+y_test = pd.Series(y_test)
+
 
 # applyPCA(X_train,y_train,2)
 
 # #training isomap on 30% of the data
-subsetX_train = X_train.sample(frac=0.30)
+subsetX_train = X_train.sample(frac=0.10)
 subsetY_train = y_train.iloc[subsetX_train.index.values]
-print("Sample Size: " + str(subsetX_train.shape[0]))
+# print("Sample Size: " + str(subsetX_train.shape[0]))
 # applyISOMAP(subsetX_train,subsetY_train,2)
 
 
@@ -162,9 +191,18 @@ print("Sample Size: " + str(subsetX_train.shape[0]))
 # using the trained model
 # load the model
 model = FashionSimpleNet()
-model.load_state_dict(torch.load('fashionmnist/saved-models/FashionSimpleNet-run-1.pth.tar')['state_dict'])
-print(model.classifier[3])
+state_dict = torch.load('fashionmnist/saved-models/FashionSimpleNet-run-1.pth.tar')['state_dict']
+model.load_state_dict(state_dict)
+
+model.classifier = torch.nn.Sequential(*list(model.classifier.children())[:-1]) #remove the last layer
+model.eval()
+print(model)
+# print(subsetX_train[:0])
+tensor = torch.from_numpy(subsetX_train.values)
+subsetX_modeled = model(torch.autograd.Variable(tensor, volatile=True))
+# print(subsetX_modeled.shape)
 # applyTSNE(subsetX_train,subsetY_train,2,'tsne-resnet.png')
+
 
 
 

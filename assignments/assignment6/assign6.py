@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from fashionmnist.model import FashionSimpleNet
 
 import torch
+from torch.utils.data import DataLoader
 
 from tqdm import * # remove 
 
@@ -198,8 +199,10 @@ model.classifier = torch.nn.Sequential(*list(model.classifier.children())[:-1]) 
 model.eval()
 print(model)
 # print(subsetX_train[:0])
-tensor = torch.from_numpy(subsetX_train.values)
-subsetX_modeled = model(torch.autograd.Variable(tensor, volatile=True))
+dataLoader = DataLoader(subsetX_train.values, batch_size=64, shuffle=True, num_workers=1)
+
+for i, X in tqdm(enumerate(dataLoader), desc='computing', total=subsetX_train.shape[0]/64):
+    subsetX_modeled = model(torch.autograd.Variable(X, volatile=True))
 # print(subsetX_modeled.shape)
 # applyTSNE(subsetX_train,subsetY_train,2,'tsne-resnet.png')
 

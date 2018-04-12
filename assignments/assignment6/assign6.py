@@ -132,9 +132,9 @@ def applyISOMAP(XtrainDF, yTrainSeries, nFeatures):
     return
 
 def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
-    XtrainDFStandard = StandardScaler().fit_transform(XtrainDF)
+    # XtrainDFStandard = StandardScaler().fit_transform(XtrainDF)
     tsnemodel = TSNE(n_components=nFeatures,verbose=True)
-    XtrainPrincipalComponents = tsnemodel.fit_transform(XtrainDFStandard)
+    XtrainPrincipalComponents = tsnemodel.fit_transform(XtrainDF)
     XtrainPrincipalComponentsDF = pd.DataFrame(XtrainPrincipalComponents,columns=['pc'+str(i) for i in range(nFeatures)])
     # print(XtrainPrincipalComponentsDF.head())
     # print(yTrainSeries.head())
@@ -194,10 +194,10 @@ y_test = pd.Series(y_test)
 
 
 
-applyPCA(X_train,y_train,2)
+# applyPCA(X_train,y_train,2)
 
 # #training isomap on 30% of the data
-percentOfDataUsed = 1
+percentOfDataUsed = 0.3
 subsetX_train = X_train.sample(frac=percentOfDataUsed)
 
 # exit()
@@ -208,9 +208,9 @@ subsetY_train = y_train.iloc[subsetX_train.index.values]
 print("Sample Size: " + str(subsetX_train.shape[0]))
 # applyISOMAP(subsetX_train,subsetY_train,2)
 
-applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
+# applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
 
-# applyTSNE(X_train,y_train,2,'tsne-raw.png')
+applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw-0.3-2.png')
 
 # using the trained model
 # load the model
@@ -271,4 +271,4 @@ for i , (X,y) in tqdm(enumerate(train_loader), desc='Predicting', total=num_batc
 outputXs.to_csv('tsnetPredictedXs.csv')
 outputYs.to_csv('tsnetPredictedYs.csv')
 
-applyTSNE(outputXs,outputYs,2,'tsne-predicted.png')
+applyTSNE(outputXs,outputYs,2,'tsne-predicted-0.3-2.png')

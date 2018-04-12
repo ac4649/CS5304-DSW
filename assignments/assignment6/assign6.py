@@ -192,7 +192,7 @@ y_test = pd.Series(y_test)
 
 
 
-# applyPCA(X_train,y_train,2)
+applyPCA(X_train,y_train,2)
 
 # #training isomap on 30% of the data
 percentOfDataUsed = 0.3
@@ -201,10 +201,10 @@ subsetX_train = X_train.sample(frac=percentOfDataUsed)
 # exit()
 
 subsetY_train = y_train.iloc[subsetX_train.index.values]
-print(subsetX_train.shape)
-print(subsetY_train.shape)
-# print("Sample Size: " + str(subsetX_train.shape[0]))
-# applyISOMAP(subsetX_train,subsetY_train,2)
+# print(subsetX_train.shape)
+# print(subsetY_train.shape)
+print("Sample Size: " + str(subsetX_train.shape[0]))
+applyISOMAP(subsetX_train,subsetY_train,2)
 
 applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
 
@@ -258,11 +258,11 @@ for i , (X,y) in tqdm(enumerate(train_loader), desc='Predicting', total=num_batc
     outputXs = outputXs.append(curXs)
     outputYs = outputYs.append(pd.Series(y.cpu().numpy()))
     
-    if i > percentOfDataUsed*num_batches:
+    # if i > percentOfDataUsed*num_batches:
 
-        break
-print(outputXs.head())
-print(outputYs.head())
+    #     break
+# print(outputXs.head())
+# print(outputYs.head())
 # exit()
 outputXs.to_csv('tsnetPredictedXs.csv')
 outputYs.to_csv('tsnetPredictedYs.csv')

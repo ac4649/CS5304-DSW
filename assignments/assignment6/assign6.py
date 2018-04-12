@@ -98,7 +98,7 @@ def applyISOMAP(XtrainDF, yTrainSeries, nFeatures):
     XtrainPrincipalComponentsDF = pd.DataFrame(XtrainPrincipalComponents,columns=['pc'+str(i) for i in range(nFeatures)])
 
     resultsDF = pd.concat([XtrainPrincipalComponentsDF, yTrainSeries], axis = 1)
-
+    resultsDF.to_csv("isomapData.csv")
     fig = plt.figure(figsize = (8,8))
     ax = fig.add_subplot(1,1,1) 
     ax.set_xlabel('ISOMAP Principal Component 1', fontsize = 15)
@@ -142,6 +142,8 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
     # resultsDF = pd.concat([XtrainPrincipalComponentsDF, yTrainSeries], axis = 1)
 
     # print(resultsDF.head())
+    XtrainPrincipalComponentsDF.to_csv("TSNEDataX.csv")
+    yTrainSeries.to_csv("TSNEDataY.csv")
 
     fig = plt.figure(figsize = (8,8))
     ax = fig.add_subplot(1,1,1) 
@@ -163,8 +165,8 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
         ]
     for target in tqdm(targets):
         indicesToKeep = yTrainSeries[yTrainSeries == target]
-        print(indicesToKeep)
-        print(indicesToKeep.index.values)
+        # print(indicesToKeep)
+        # print(indicesToKeep.index.values)
         ax.scatter(XtrainPrincipalComponentsDF.iloc[indicesToKeep]['pc0']
                 , XtrainPrincipalComponentsDF.iloc[indicesToKeep]['pc1']
                 , c = colors[target]
@@ -195,7 +197,7 @@ y_test = pd.Series(y_test)
 applyPCA(X_train,y_train,2)
 
 # #training isomap on 30% of the data
-percentOfDataUsed = 0.3
+percentOfDataUsed = 1
 subsetX_train = X_train.sample(frac=percentOfDataUsed)
 
 # exit()
@@ -204,7 +206,7 @@ subsetY_train = y_train.iloc[subsetX_train.index.values]
 # print(subsetX_train.shape)
 # print(subsetY_train.shape)
 print("Sample Size: " + str(subsetX_train.shape[0]))
-applyISOMAP(subsetX_train,subsetY_train,2)
+# applyISOMAP(subsetX_train,subsetY_train,2)
 
 applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
 
@@ -249,6 +251,8 @@ num_batches = num_batches if train_loader.drop_last else num_batches + 1
 
 outputXs = pd.DataFrame()
 outputYs = pd.Series()
+
+# percentOfDataUsed = 1 # can modify the percentage used for full model tsne
 
 for i , (X,y) in tqdm(enumerate(train_loader), desc='Predicting', total=num_batches*percentOfDataUsed):
     X = torch.autograd.Variable(X, volatile=True)

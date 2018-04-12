@@ -195,7 +195,7 @@ y_test = pd.Series(y_test)
 # applyPCA(X_train,y_train,2)
 
 # #training isomap on 30% of the data
-percentOfDataUsed = 0.1
+percentOfDataUsed = 0.3
 subsetX_train = X_train.sample(frac=percentOfDataUsed)
 
 # exit()

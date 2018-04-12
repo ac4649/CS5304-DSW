@@ -136,12 +136,12 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
     tsnemodel = TSNE(n_components=nFeatures,verbose=True)
     XtrainPrincipalComponents = tsnemodel.fit_transform(XtrainDFStandard)
     XtrainPrincipalComponentsDF = pd.DataFrame(XtrainPrincipalComponents,columns=['pc'+str(i) for i in range(nFeatures)])
-    print(XtrainPrincipalComponentsDF.head())
-    print(yTrainSeries.head())
+    # print(XtrainPrincipalComponentsDF.head())
+    # print(yTrainSeries.head())
 
-    resultsDF = pd.concat([XtrainPrincipalComponentsDF, yTrainSeries], axis = 1)
+    # resultsDF = pd.concat([XtrainPrincipalComponentsDF, yTrainSeries], axis = 1)
 
-    print(resultsDF.head())
+    # print(resultsDF.head())
 
     fig = plt.figure(figsize = (8,8))
     ax = fig.add_subplot(1,1,1) 
@@ -162,9 +162,11 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
         [0,0.5,0.5,1]
         ]
     for target in tqdm(targets):
-        indicesToKeep = (resultsDF[0] == target)
-        ax.scatter(resultsDF.loc[indicesToKeep, 'pc0']
-                , resultsDF.loc[indicesToKeep, 'pc1']
+        indicesToKeep = yTrainSeries[yTrainSeries == target]
+        print(indicesToKeep)
+        print(indicesToKeep.index.values)
+        ax.scatter(XtrainPrincipalComponentsDF.iloc[indicesToKeep]['pc0']
+                , XtrainPrincipalComponentsDF.iloc[indicesToKeep]['pc1']
                 , c = colors[target]
                 , s = 50)
     ax.legend(targets)
@@ -195,9 +197,12 @@ y_test = pd.Series(y_test)
 # #training isomap on 30% of the data
 percentOfDataUsed = 0.1
 subsetX_train = X_train.sample(frac=percentOfDataUsed)
-# print(subsetX_train.shape)
+
+# exit()
 
 subsetY_train = y_train.iloc[subsetX_train.index.values]
+print(subsetX_train.shape)
+print(subsetY_train.shape)
 # print("Sample Size: " + str(subsetX_train.shape[0]))
 # applyISOMAP(subsetX_train,subsetY_train,2)
 
@@ -230,6 +235,7 @@ val_loader = DataLoader(valset, batch_size=batch_size,
 model = FashionSimpleNet()
 state_dict = torch.load('fashionmnist/saved-models/FashionSimpleNet-run-1.pth.tar')['state_dict']
 model.load_state_dict(state_dict)
+print(model)
 
 model.classifier = torch.nn.Sequential(*list(model.classifier.children())[:-1]) #remove the last layer
 model.eval()
@@ -249,15 +255,15 @@ for i , (X,y) in tqdm(enumerate(train_loader), desc='Predicting', total=num_batc
     netX = model(X)
     # print(netX.data.cpu().numpy())
     curXs = pd.DataFrame(netX.data.cpu().numpy())
-    outputXs = outputXs.append(curXs,ignore_index=True)
+    outputXs = outputXs.append(curXs)
     outputYs = outputYs.append(pd.Series(y.cpu().numpy()))
     
     if i > percentOfDataUsed*num_batches:
 
         break
-print(outputXs.shape)
-print(outputYs.shape)
-
+print(outputXs.head())
+print(outputYs.head())
+# exit()
 outputXs.to_csv('tsnetPredictedXs.csv')
 outputYs.to_csv('tsnetPredictedYs.csv')
 

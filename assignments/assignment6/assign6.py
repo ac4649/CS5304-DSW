@@ -193,7 +193,7 @@ y_test = pd.Series(y_test)
 
 
 
-# applyPCA(X_train,y_train,2)
+applyPCA(X_train,y_train,2)
 
 # #training isomap on 30% of the data
 percentOfDataUsed = 1
@@ -205,11 +205,11 @@ subsetY_train = y_train.iloc[subsetX_train.index.values]
 # print(subsetX_train.shape)
 # print(subsetY_train.shape)
 print("Sample Size: " + str(subsetX_train.shape[0]))
-# applyISOMAP(subsetX_train,subsetY_train,2)
+applyISOMAP(subsetX_train,subsetY_train,2)
 
 # applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
 
-applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw-0.1.png')
+applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw-0.3.png')
 
 # using the trained model
 # load the model
@@ -271,4 +271,4 @@ outputXs.to_csv('tsnetPredictedXs.csv')
 outputYs.to_csv('tsnetPredictedYs.csv')
 
 
-applyTSNE(outputXs,outputYs,2,'tsne-predicted-0.1.png')
+applyTSNE(outputXs,outputYs,2,'tsne-predicted-0.3.png')

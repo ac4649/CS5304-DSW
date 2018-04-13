@@ -136,12 +136,10 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
     tsnemodel = TSNE(n_components=nFeatures,verbose=True)
     XtrainPrincipalComponents = tsnemodel.fit_transform(XtrainDF)
     XtrainPrincipalComponentsDF = pd.DataFrame(XtrainPrincipalComponents,columns=['pc'+str(i) for i in range(nFeatures)])
-    print(XtrainPrincipalComponentsDF.head())
-    # print(yTrainSeries.head())
 
-    # resultsDF = pd.concat([XtrainPrincipalComponentsDF, yTrainSeries], axis = 1)
+    yTrainSeries = yTrainSeries.reset_index(drop=True)
+    XtrainPrincipalComponentsDF['y'] = yTrainSeries
 
-    # print(resultsDF.head())
     XtrainPrincipalComponentsDF.to_csv("TSNEDataX.csv")
     yTrainSeries.to_csv("TSNEDataY.csv")
 
@@ -164,11 +162,12 @@ def applyTSNE(XtrainDF, yTrainSeries, nFeatures,imageName):
         [0,0.5,0.5,1]
         ]
     for target in tqdm(targets):
-        indicesToKeep = yTrainSeries[yTrainSeries == target]
-        # print(indicesToKeep)
-        indicesToKeep = indicesToKeep.index.values
-        ax.scatter(XtrainPrincipalComponentsDF.loc[indicesToKeep]['pc0']
-                , XtrainPrincipalComponentsDF.loc[indicesToKeep]['pc1']
+        
+        # indicesToKeep = (XtrainPrincipalComponentsDF['y'] == target)
+        # indicesToKeep = indicesToKeep.index.values
+
+        ax.scatter(XtrainPrincipalComponentsDF[XtrainPrincipalComponentsDF['y'] == target]['pc0']
+                , XtrainPrincipalComponentsDF[XtrainPrincipalComponentsDF['y'] == target]['pc1']
                 , c = colors[target]
                 , s = 50)
     ax.legend(targets)
@@ -197,7 +196,7 @@ y_test = pd.Series(y_test)
 # applyPCA(X_train,y_train,2)
 
 # #training isomap on 30% of the data
-percentOfDataUsed = 1
+percentOfDataUsed = 0.005
 subsetX_train = X_train.sample(frac=percentOfDataUsed)
 
 # exit()
@@ -210,7 +209,7 @@ print("Sample Size: " + str(subsetX_train.shape[0]))
 
 # applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw.png')
 
-applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw-0.3.png')
+applyTSNE(subsetX_train,subsetY_train,2,'tsne-raw-0.1.png')
 
 # using the trained model
 # load the model
@@ -262,13 +261,14 @@ for i , (X,y) in tqdm(enumerate(train_loader), desc='Predicting', total=num_batc
     outputXs = outputXs.append(curXs)
     outputYs = outputYs.append(pd.Series(y.cpu().numpy()))
     
-    # if i > percentOfDataUsed*num_batches:
+    if i > percentOfDataUsed*num_batches:
 
-    #     break
+        break
 # print(outputXs.head())
 # print(outputYs.head())
 # exit()
 outputXs.to_csv('tsnetPredictedXs.csv')
 outputYs.to_csv('tsnetPredictedYs.csv')
 
-applyTSNE(outputXs,outputYs,2,'tsne-predicted-0.3.png')
+
+applyTSNE(outputXs,outputYs,2,'tsne-predicted-0.1.png')
